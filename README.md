@@ -90,7 +90,7 @@ Leuten automatisch ein Thread, ohne dass irgendwo ein Chat gebaut wurde.
 
 Ein einziger Cloudflare Worker liefert **beides** aus: die Seite und die API.
 Kein GitHub Pages daneben, kein CORS, kein zweiter Deploy, der synchron bleiben
-muss. Statische Dateien werden direkt aus `docs/` bedient und erreichen den
+muss. Statische Dateien werden direkt aus `web/` bedient und erreichen den
 Worker-Code gar nicht erst — nur Pfade ohne passende Datei, also `/api/*`,
 laufen durch `worker/index.js`.
 
@@ -100,7 +100,7 @@ pager/
 │  ├─ index.js        Router, Auth, Geräte, Senden, Verlauf
 │  ├─ push.js         RFC 8291 (aes128gcm) + RFC 8292 (VAPID) — reines WebCrypto
 │  └─ schema.sql      D1: devices, messages
-├─ docs/
+├─ web/
 │  ├─ index.html      die ganze App: Gate, Login, Identität, Personen, Threads
 │  ├─ sw.js           Service Worker — zeigt die Notification, weckt offene Fenster
 │  └─ manifest.webmanifest

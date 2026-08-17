@@ -17,11 +17,11 @@
   // für einen passwortgeschützten Space unnötige Angriffsfläche.
   "preview_urls": false,
 
-  // Alles unter docs/ wird direkt ausgeliefert und erreicht den Worker gar
+  // Alles unter web/ wird direkt ausgeliefert und erreicht den Worker gar
   // nicht erst. Nur Pfade ohne passende Datei — also /api/* — laufen durch
   // worker/index.js.
   "assets": {
-    "directory": "./docs/"
+    "directory": "./web/"
   },
 
   // Die echte database_id trägt setup.mjs ein. Der Platzhalter muss stehen

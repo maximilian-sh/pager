@@ -1,7 +1,7 @@
 // pager — ein Space. Wer das Passwort hat, darf senden; wer sich anmeldet,
 // kann empfangen. Adressiert wird die Person, nicht das Gerät.
 //
-// Statische Dateien liefert Cloudflare direkt aus docs/ aus (siehe
+// Statische Dateien liefert Cloudflare direkt aus web/ aus (siehe
 // wrangler.jsonc). Hier landen nur Pfade, für die es keine Datei gibt.
 
 import { sendPush } from './push.js';

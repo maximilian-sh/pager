@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pager</title>
+<style>
+  :root {
+    color-scheme: light;
+    --line: #e6e6e6;
+    --muted: #8a8a8a;
+    --ink: #111;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 4rem 1.5rem 6rem;
+    background: #fff; color: var(--ink);
+    font: 15px/1.6 ui-sans-serif, -apple-system, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 25rem; margin: 0 auto; }
+  header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+  .mark {
+    width: 1.9rem; height: 1.9rem; border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    display: grid; place-items: center; flex: none;
+  }
+  .mark i { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--ink); }
+  h1 { margin: 0; font-size: 1.2rem; font-weight: 600; letter-spacing: -0.02em; }
+  label { display: block; margin-bottom: 1.1rem; }
+  label > span {
+    display: block; font-size: 0.75rem; font-weight: 500;
+    color: var(--muted); margin-bottom: 0.35rem;
+  }
+  input, textarea, select {
+    width: 100%; padding: 0.6rem 0.75rem;
+    background: #fff; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 9px; font: inherit;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none; border-color: var(--ink);
+  }
+  input::placeholder, textarea::placeholder { color: #bdbdbd; }
+  textarea { resize: vertical; min-height: 4.5rem; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; }
+  .row { display: flex; gap: 0.9rem; align-items: center; margin-top: 1.4rem; }
+  button {
+    padding: 0.6rem 1.3rem; border: 1px solid var(--ink); border-radius: 9px;
+    background: var(--ink); color: #fff; font: inherit; font-weight: 550; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:active { opacity: 0.7; }
+  button:disabled { opacity: 0.35; cursor: default; }
+  #status, #setupStatus { font-size: 0.85rem; color: var(--muted); }
+  .ok { color: var(--ink) !important; }
+  .err { color: #c0392b !important; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 3rem 0 2rem; }
+  details summary {
+    cursor: pointer; font-size: 0.8rem; font-weight: 500;
+    color: var(--muted); list-style: none;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: '+ '; color: #c4c4c4; }
+  details[open] summary::before { content: '– '; }
+  details[open] summary { margin-bottom: 1.5rem; }
+  ul { list-style: none; margin: 0 0 1.4rem; padding: 0; }
+  li {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.6rem 0; border-bottom: 1px solid var(--line);
+    font-size: 0.9rem;
+  }
+  li:first-child { border-top: 1px solid var(--line); }
+  li b { font-weight: 550; }
+  li code {
+    flex: 1; font-size: 0.72rem; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  li button {
+    padding: 0 0.3rem; background: transparent; color: #c4c4c4;
+    border: none; font-size: 1.15rem; line-height: 1;
+  }
+  li button:hover { color: #c0392b; }
+  .empty { color: var(--muted); font-size: 0.85rem; padding: 0.6rem 0; }
+  .hint { margin: 1rem 0 0; font-size: 0.78rem; line-height: 1.6; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="mark"><i></i></div>
+    <h1>pager</h1>
+  </header>
+
+  <label>
+    <span>Gerät</span>
+    <select id="device"></select>
+  </label>
+  <label>
+    <span>Titel</span>
+    <input id="title" value="pager" autocomplete="off">
+  </label>
+  <label>
+    <span>Text</span>
+    <textarea id="body">Test</textarea>
+  </label>
+  <label>
+    <span>Beim Antippen öffnen — optional</span>
+    <input id="url" class="mono" placeholder="https://…" autocomplete="off">
+  </label>
+  <div class="row">
+    <button id="send">Senden</button>
+    <span id="status"></span>
+  </div>
+
+  <hr>
+
+  <details id="setup">
+    <summary>Geräte</summary>
+    <ul id="list"></ul>
+    <label>
+      <span>Name</span>
+      <input id="newName" placeholder="z. B. iPhone" autocomplete="off">
+    </label>
+    <label>
+      <span>Subscription JSON vom Handy</span>
+      <textarea id="newSub" class="mono" rows="5" placeholder='{"endpoint":"https://…","keys":{"p256dh":"…","auth":"…"}}'></textarea>
+    </label>
+    <div class="row">
+      <button id="add">Hinzufügen</button>
+      <span id="setupStatus"></span>
+    </div>
+    <p class="hint">
+      Auf dem Handy die pager-Seite öffnen, zum Home-Bildschirm hinzufügen,
+      von dort starten, anmelden, JSON kopieren.
+    </p>
+  </details>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function setStatus(el, message, kind = '') {
+  el.textContent = message;
+  el.className = kind;
+}
+
+async function api(path, body) {
+  const response = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return { ok: response.ok, data: await response.json() };
+}
+
+async function refresh() {
+  const devices = await (await fetch('/devices')).json();
+
+  const options = devices.length > 1
+    ? [...devices.map((d) => d.name), 'all']
+    : devices.map((d) => d.name);
+  $('device').innerHTML = options.length
+    ? options.map((name) => `<option value="${name}">${name === 'all' ? 'Alle Geräte' : name}</option>`).join('')
+    : '<option value="">Noch keins</option>';
+
+  $('list').innerHTML = devices.length
+    ? devices.map((d) => `
+        <li>
+          <b>${d.name}</b>
+          <code>${new URL(d.endpoint).host}</code>
+          <button data-remove="${d.name}" title="Entfernen">×</button>
+        </li>`).join('')
+    : '<div class="empty">Noch keine Geräte angemeldet.</div>';
+
+  $('send').disabled = !devices.length;
+  if (!devices.length) $('setup').open = true;
+}
+
+$('list').onclick = async (event) => {
+  const name = event.target.dataset.remove;
+  if (!name) return;
+  await api('/devices/remove', { name });
+  await refresh();
+  setStatus($('setupStatus'), `„${name}" entfernt`, 'ok');
+};
+
+$('add').onclick = async () => {
+  const { ok, data } = await api('/devices/add', {
+    name: $('newName').value,
+    subscription: $('newSub').value,
+  });
+  if (!ok) return setStatus($('setupStatus'), data.error, 'err');
+  $('newName').value = '';
+  $('newSub').value = '';
+  await refresh();
+  setStatus($('setupStatus'), `„${data.added}" hinzugefügt`, 'ok');
+};
+
+$('send').onclick = async () => {
+  $('send').disabled = true;
+  setStatus($('status'), 'Sende…');
+  try {
+    const { ok, data } = await api('/send', {
+      title: $('title').value,
+      body: $('body').value,
+      url: $('url').value,
+      device: $('device').value,
+    });
+
+    setStatus(
+      $('status'),
+      data.error || data.results.map((r) => `${r.name}: ${r.ok ? 'ok' : (r.error || r.status)}`).join(' · '),
+      ok ? 'ok' : 'err',
+    );
+    if (data.dead?.length) await refresh();
+  } catch (err) {
+    setStatus($('status'), err.message, 'err');
+  } finally {
+    $('send').disabled = false;
+  }
+};
+
+refresh();
+</script>
+</body>
+</html>

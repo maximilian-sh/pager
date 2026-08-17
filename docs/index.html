@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>pager</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="pager">
+<meta name="theme-color" content="#ffffff">
+<style>
+  :root {
+    color-scheme: light;
+    --line: #e6e6e6;
+    --muted: #8a8a8a;
+    --ink: #111;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    padding: max(4rem, env(safe-area-inset-top)) 1.5rem 4rem;
+    background: #fff;
+    color: var(--ink);
+    font: 16px/1.6 ui-sans-serif, -apple-system, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 24rem; margin: 0 auto; }
+  .mark {
+    width: 2.5rem; height: 2.5rem; border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    display: grid; place-items: center; margin-bottom: 1.75rem;
+  }
+  .mark i { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--ink); }
+  h1 { margin: 0 0 0.25rem; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+  p.lede { margin: 0 0 2.5rem; color: var(--muted); font-size: 0.95rem; }
+  ol {
+    margin: 0; padding-left: 1.1rem;
+    color: var(--muted); font-size: 0.92rem;
+  }
+  ol li { margin-bottom: 0.35rem; }
+  ol li::marker { color: #c4c4c4; }
+  ol b { color: var(--ink); font-weight: 500; }
+  button {
+    width: 100%; padding: 0.85rem 1rem;
+    border: 1px solid var(--ink); border-radius: 10px;
+    background: var(--ink); color: #fff;
+    font: inherit; font-weight: 550; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:active { opacity: 0.7; }
+  button:disabled { opacity: 0.35; cursor: default; }
+  button.ghost {
+    background: transparent; color: var(--ink);
+    border-color: var(--line); font-weight: 450; margin-top: 0.6rem;
+  }
+  textarea {
+    width: 100%; min-height: 8rem; margin-top: 1.25rem; padding: 0.8rem;
+    background: #fafafa; color: #444;
+    border: 1px solid var(--line); border-radius: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.7rem; line-height: 1.5; resize: vertical;
+  }
+  .status { margin-top: 1rem; font-size: 0.88rem; color: var(--muted); }
+  .status.ok { color: #111; }
+  .status.err { color: #c0392b; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2.5rem 0; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <div class="mark"><i></i></div>
+  <h1>pager</h1>
+  <p class="lede">Dieses Gerät für Nachrichten anmelden.</p>
+
+  <div id="ios">
+    <ol>
+      <li>Unten auf das <b>Teilen-Symbol</b> tippen</li>
+      <li><b>Zum Home-Bildschirm</b> wählen</li>
+      <li>pager <b>von dort</b> öffnen, nicht aus Safari</li>
+    </ol>
+  </div>
+
+  <div class="hidden" id="main">
+    <button id="enable">Benachrichtigungen aktivieren</button>
+    <div class="status" id="status"></div>
+    <textarea id="output" class="hidden" readonly></textarea>
+    <button id="copy" class="ghost hidden">JSON kopieren</button>
+  </div>
+</main>
+
+<script>
+const VAPID_PUBLIC = 'BOl2Q5j2ibc_3oCE7EXbc43rg5g_9bBgsNisaBXLkgbkt6XxvfoX7J3oEJFgXlQB8sueWB9gUfm1a-sYzVi-_lQ';
+
+const $ = (id) => document.getElementById(id);
+
+function setStatus(message, kind = '') {
+  $('status').textContent = message;
+  $('status').className = `status ${kind}`;
+}
+
+function urlBase64ToUint8Array(base64) {
+  const padded = (base64 + '='.repeat((4 - base64.length % 4) % 4))
+    .replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+}
+
+// iOS liefert Push nur, wenn die Seite als Home-Screen-App läuft.
+const standalone = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+if (!isIOS || standalone) {
+  $('ios').classList.add('hidden');
+  $('main').classList.remove('hidden');
+}
+
+if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+  $('ios').classList.add('hidden');
+  $('main').classList.remove('hidden');
+  $('enable').disabled = true;
+  setStatus('Dieser Browser kann kein Web Push.', 'err');
+}
+
+async function show(subscription) {
+  $('output').value = JSON.stringify(subscription.toJSON(), null, 2);
+  $('output').classList.remove('hidden');
+  $('copy').classList.remove('hidden');
+  $('enable').textContent = 'Neu anmelden';
+}
+
+$('copy').onclick = async () => {
+  try {
+    await navigator.clipboard.writeText($('output').value);
+    setStatus('Kopiert.', 'ok');
+  } catch {
+    $('output').select();
+    setStatus('Markiert — bitte manuell kopieren.');
+  }
+};
+
+$('enable').onclick = async () => {
+  $('enable').disabled = true;
+  setStatus('Registriere…');
+  try {
+    const registration = await navigator.serviceWorker.register('sw.js');
+    await navigator.serviceWorker.ready;
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') throw new Error(`Berechtigung: ${permission}`);
+
+    const existing = await registration.pushManager.getSubscription();
+    if (existing) await existing.unsubscribe();
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
+    });
+
+    await show(subscription);
+    setStatus('Angemeldet. JSON kopieren und weitergeben.', 'ok');
+  } catch (err) {
+    setStatus(err.message, 'err');
+  } finally {
+    $('enable').disabled = false;
+  }
+};
+
+// Schon angemeldet? Dann JSON direkt zeigen.
+(async () => {
+  if (!('serviceWorker' in navigator)) return;
+  const registration = await navigator.serviceWorker.getRegistration();
+  const existing = await registration?.pushManager.getSubscription();
+  if (existing) {
+    await show(existing);
+    setStatus('Dieses Gerät ist bereits angemeldet.', 'ok');
+  }
+})();
+</script>
+</body>
+</html>

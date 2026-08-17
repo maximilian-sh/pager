@@ -1,0 +1,5 @@
+{
+  "publicKey": "wird von keys.mjs erzeugt",
+  "privateKey": "wird von keys.mjs erzeugt — niemals teilen",
+  "subject": "mailto:du@example.com"
+}

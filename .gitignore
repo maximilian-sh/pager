@@ -1,0 +1,8 @@
+# Privater VAPID-Key — gehört nicht ins Repo
+vapid.json
+
+# Angemeldete Geräte
+devices.json
+
+node_modules/
+.DS_Store

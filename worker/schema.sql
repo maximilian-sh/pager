@@ -7,7 +7,7 @@
 
 CREATE TABLE IF NOT EXISTS devices (
   id         INTEGER PRIMARY KEY,
-  person     TEXT    NOT NULL,        -- "max kallina"
+  person     TEXT    NOT NULL,        -- "maximilian kallina"
   device     TEXT    NOT NULL,        -- "iphone", "mac", …
   endpoint   TEXT    NOT NULL UNIQUE, -- Re-Registrierung desselben Geräts = Upsert
   p256dh     TEXT    NOT NULL,

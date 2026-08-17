@@ -17,7 +17,7 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 const clean = (value) => (typeof value === 'string' ? value.trim() : '');
 
 // Namen sind klein und einfach-leerzeichig. Das ist zugleich der Schlüssel und
-// der Anzeigename — "  Max   KALLINA " und "max kallina" sind dieselbe Person.
+// der Anzeigename — "  MAXIMILIAN   Kallina " und "maximilian kallina" sind dieselbe Person.
 // Nicht auf Nachrichten anwenden, dort sind Zeilenumbrüche gewollt.
 const name = (value) => clean(value).replace(/\s+/g, ' ').toLowerCase();
 

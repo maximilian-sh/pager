@@ -1,10 +1,8 @@
 <div align="center">
 
-```
-      ╭───╮
-      │ ● │   p a g e r
-      ╰───╯
-```
+<img src=".github/hero.png" width="100%" alt="pager" />
+
+<br>
 
 **Kurze Nachrichten aufs Handy. Ohne fremden Dienst dazwischen.**
 Ein Passwort, ein Link, und dein iPhone brummt.
@@ -17,7 +15,7 @@ Ein Passwort, ein Link, und dein iPhone brummt.
 
 <div align="center">
 
-**Personen statt Geräte**  ·  **Ende-zu-Ende verschlüsselt**  ·  **Verlauf als Thread**  ·  **ein Befehl zum Aufsetzen**
+**Personen statt Geräte**  ·  **Apple liest nicht mit**  ·  **Verlauf als Thread**  ·  **ein Befehl zum Aufsetzen**
 
 </div>
 
@@ -70,9 +68,9 @@ Schlüssel, Passwort, Datenbank, Deploy — ein Befehl, ein Browser-Login.
 
 <div align="center">
 
-<sub>Adressiert wird die **Person**. Eine Nachricht an `max kallina` geht an all seine Geräte —<br>
+Adressiert wird die **Person**. Eine Nachricht an `maximilian kallina` geht an all seine Geräte —<br>
 egal ob du sie vom Mac oder vom iPhone schickst. Deshalb ist der Verlauf zwischen zwei<br>
-Leuten automatisch ein Thread, ohne dass irgendwo ein Chat gebaut wurde.</sub>
+Leuten automatisch ein Thread, ohne dass irgendwo ein Chat gebaut wurde.
 
 </div>
 
@@ -84,7 +82,7 @@ Leuten automatisch ein Thread, ohne dass irgendwo ein Chat gebaut wurde.</sub>
 
 # Technik
 
-<sub>Wie es gebaut ist, was wo läuft, und welche Entscheidungen dahinterstehen.</sub>
+*Wie es gebaut ist, was wo läuft, und welche Entscheidungen dahinterstehen.*
 
 <br>
 
@@ -127,9 +125,15 @@ Du tippst Text  →  Worker verschlüsselt  →  Apple  →  Gerät
                                                 sw.js zeigt sie an
 ```
 
-Verschlüsselt wird im Worker, entschlüsselt erst auf dem Gerät. Apple leitet
-nur weiter und kann nicht mitlesen — das ist keine Zusicherung von uns, sondern
-die Bauart von Web Push.
+Verschlüsselt wird im Worker, entschlüsselt erst auf dem Gerät. Apple und
+Google leiten nur weiter und können nicht mitlesen — das ist keine Zusicherung
+von uns, sondern die Bauart von Web Push.
+
+**Das ist ausdrücklich keine Ende-zu-Ende-Verschlüsselung.** Verschlüsselt wird
+erst *ab* dem Worker, und der sieht jede Nachricht im Klartext, bevor er sie
+verpackt — er schreibt sie auch so in die Datenbank. Geschützt ist die Strecke
+zu den Push-Diensten, nicht der Inhalt vor dem Betreiber des Space. Wer Zugriff
+auf das Cloudflare-Konto hat, liest den gesamten Verlauf mit.
 
 <br>
 
@@ -154,8 +158,8 @@ Alles unter `/api/`, damit nichts mit Dateipfaden kollidiert. Alle Routen außer
 
 Namen sind durchgehend **klein und einfach-leerzeichig**. Das ist keine Kosmetik:
 dadurch ist der Anzeigename zugleich der Schlüssel, und es gibt keine zweite
-Schreibweise, die auseinanderlaufen könnte. `  MAX   kallina ` und
-`max kallina` sind dieselbe Person, ohne dass irgendwo entschieden werden muss,
+Schreibweise, die auseinanderlaufen könnte. `  MAXIMILIAN   Kallina ` und
+`maximilian kallina` sind dieselbe Person, ohne dass irgendwo entschieden werden muss,
 welche Variante „gewinnt".
 
 ```sql
@@ -211,7 +215,7 @@ Person bleibt.
 
 **Die Notification zeigt auf iOS nur Titel und Text** — ein eigenes „von"-Feld
 gibt es nicht. Ohne eigenen Titel steht deshalb der Absender dort:
-„**max kallina**" / „build ist durch". Wer geschrieben hat, steht im Verlauf
+„**maximilian kallina**" / „build ist durch". Wer geschrieben hat, steht im Verlauf
 ohnehin immer.
 
 <br>
@@ -329,6 +333,10 @@ Alarm, auf den man nicht antworten muss.
 Rollen. Der Absendername ist selbst gewählt und wird nicht geprüft: wer das
 Passwort hat, kann sich nennen wie er will und jeden anfunken. Für eine
 vertraute Runde gedacht, nicht für ein Unternehmen.
+
+**Kein sicherer Messenger.** Der Verlauf liegt unverschlüsselt in D1, der
+Betreiber kann alles mitlesen. Wer Vertraulichkeit vor dem Server braucht,
+nimmt Signal — pager schickt Alarme, keine Geheimnisse.
 
 **Ein Fork ist ein neuer Space, kein Beitritt.** Wer mitmachen soll, bekommt
 einen Link — nicht das Repo.

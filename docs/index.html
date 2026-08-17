@@ -233,7 +233,7 @@
   <h2>Wer bist du?</h2>
   <label>
     <span>Vor- und Nachname</span>
-    <input id="myName" placeholder="z. B. max kallina" autocomplete="name">
+    <input id="myName" placeholder="z. B. maximilian kallina" autocomplete="name">
   </label>
   <label>
     <span>Dieses Gerät</span>
@@ -623,7 +623,7 @@ async function afterLogin() {
   $('myDevice').value = store.device || guessDevice();
 
   // Namen erst prüfen, wenn wir die Liste haben — sonst tippt jemand
-  // „max kallina" und wird versehentlich zu einer zweiten Person.
+  // „maximilian kallina" und wird versehentlich zu einer zweiten Person.
   try { people = await api('people'); } catch { people = []; }
   $('myName').focus();
 }

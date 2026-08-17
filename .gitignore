@@ -1,8 +1,11 @@
-# Privater VAPID-Key — gehört nicht ins Repo
-vapid.json
-
-# Angemeldete Geräte
-devices.json
-
 node_modules/
 .DS_Store
+
+# Wrangler-Zustand und lokale D1-Daten
+.wrangler/
+
+# Temporäre Secret-Datei aus setup.mjs — sollte nie überleben, aber sicher ist sicher
+.pager-secrets.json
+
+# Lokale Entwicklungs-Secrets
+.dev.vars

@@ -10,13 +10,20 @@ self.addEventListener('push', (event) => {
     data = { body: event.data ? event.data.text() : '' };
   }
 
-  event.waitUntil(self.registration.showNotification(data.title || 'pager', {
-    body: data.body || '',
-    icon: 'icon-192.png',
-    badge: 'badge.png',
-    tag: data.tag,
-    data: { url: data.url || './' },
-  }));
+  event.waitUntil((async () => {
+    await self.registration.showNotification(data.title || 'pager', {
+      body: data.body || '',
+      icon: 'icon-192.png',
+      badge: 'badge.png',
+      tag: data.tag,
+      data: { url: data.url || './' },
+    });
+
+    // Offene Fenster mitziehen, damit ein sichtbarer Thread aktuell bleibt.
+    // Spart das Pollen — der Push ist ohnehin schon der Echtzeitkanal.
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of clients) client.postMessage({ type: 'push' });
+  })());
 });
 
 self.addEventListener('notificationclick', (event) => {

@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "pager",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-08-01",
+
+  // Adresse des Space. Beides trägt setup.mjs ein, je nachdem ob du eine
+  // eigene Domain angibst:
+  //   ohne Domain  →  workers_dev: true,  routes: []
+  //   mit Domain   →  workers_dev: false, routes: [{ … custom_domain }]
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "pager.maximilian.sh", "custom_domain": true }
+  ],
+
+  // Sonst bekommt zusätzlich jede einzelne Version eine öffentliche URL —
+  // für einen passwortgeschützten Space unnötige Angriffsfläche.
+  "preview_urls": false,
+
+  // Alles unter docs/ wird direkt ausgeliefert und erreicht den Worker gar
+  // nicht erst. Nur Pfade ohne passende Datei — also /api/* — laufen durch
+  // worker/index.js.
+  "assets": {
+    "directory": "./docs/"
+  },
+
+  // Die echte database_id trägt setup.mjs ein. Der Platzhalter muss stehen
+  // bleiben — `wrangler dev` bricht bei einem leeren Wert ab.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pager",
+      "database_id": "ec934860-c8a9-4a64-b124-cb5e611cd8eb"
+    }
+  ],
+
+  "observability": {
+    "enabled": true
+  }
+}

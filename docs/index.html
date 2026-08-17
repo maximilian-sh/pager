@@ -12,93 +12,327 @@
 <style>
   :root {
     color-scheme: light;
-    --line: #e6e6e6;
+    --line: #e8e8e8;
     --muted: #8a8a8a;
+    --faint: #c4c4c4;
     --ink: #111;
+    --err: #c0392b;
+    --mine: #111;
+    --theirs: #f4f4f4;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0;
-    min-height: 100dvh;
-    padding: max(4rem, env(safe-area-inset-top)) 1.5rem 4rem;
-    background: #fff;
-    color: var(--ink);
-    font: 16px/1.6 ui-sans-serif, -apple-system, system-ui, sans-serif;
+    background: #fff; color: var(--ink);
+    font: 15px/1.6 ui-sans-serif, -apple-system, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    display: flex; flex-direction: column;
   }
-  main { max-width: 24rem; margin: 0 auto; }
+
+  /* ─── Karten-Ansichten: Gate, Login, Identität ─────────────────────────── */
+  .card {
+    flex: 1; width: 100%; max-width: 25rem;
+    margin: 0 auto;
+    padding: max(3.5rem, env(safe-area-inset-top)) 1.5rem 3rem;
+  }
+
+  header { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 3rem; }
   .mark {
-    width: 2.5rem; height: 2.5rem; border-radius: 50%;
-    border: 1.5px solid var(--ink);
-    display: grid; place-items: center; margin-bottom: 1.75rem;
+    width: 1.9rem; height: 1.9rem; border-radius: 50%;
+    border: 1.5px solid var(--ink); display: grid; place-items: center; flex: none;
   }
-  .mark i { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--ink); }
-  h1 { margin: 0 0 0.25rem; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
-  p.lede { margin: 0 0 2.5rem; color: var(--muted); font-size: 0.95rem; }
-  ol {
-    margin: 0; padding-left: 1.1rem;
-    color: var(--muted); font-size: 0.92rem;
+  .mark i { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--ink); }
+  h1 { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; flex: 1; }
+
+  h2 {
+    margin: 0 0 1.25rem; font-size: 0.75rem; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint);
   }
-  ol li { margin-bottom: 0.35rem; }
-  ol li::marker { color: #c4c4c4; }
-  ol b { color: var(--ink); font-weight: 500; }
+
+  label { display: block; margin-bottom: 1rem; }
+  label > span {
+    display: block; font-size: 0.75rem; font-weight: 500;
+    color: var(--muted); margin-bottom: 0.35rem;
+  }
+  input, textarea, select {
+    width: 100%; padding: 0.6rem 0.75rem;
+    background: #fff; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 9px; font: inherit;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--ink); }
+  /* Namen sind im ganzen Produkt klein — auch schon beim Tippen. */
+  #myName, #myDevice { text-transform: lowercase; }
+  input::placeholder, textarea::placeholder { color: var(--faint); }
+  textarea { resize: none; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; }
+
+  .row { display: flex; gap: 0.9rem; align-items: center; margin-top: 1.3rem; }
   button {
-    width: 100%; padding: 0.85rem 1rem;
-    border: 1px solid var(--ink); border-radius: 10px;
-    background: var(--ink); color: #fff;
-    font: inherit; font-weight: 550; cursor: pointer;
-    transition: opacity 0.15s;
+    padding: 0.6rem 1.3rem; border: 1px solid var(--ink); border-radius: 9px;
+    background: var(--ink); color: #fff; font: inherit; font-weight: 550;
+    cursor: pointer; transition: opacity 0.15s;
   }
   button:active { opacity: 0.7; }
   button:disabled { opacity: 0.35; cursor: default; }
-  button.ghost {
-    background: transparent; color: var(--ink);
-    border-color: var(--line); font-weight: 450; margin-top: 0.6rem;
+  button.ghost { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 450; }
+  button.wide { width: 100%; padding: 0.8rem; }
+
+  .note { font-size: 0.85rem; color: var(--muted); }
+  .note.ok { color: var(--ink); }
+  .note.err { color: var(--err); }
+  .hint { margin: 1rem 0 0; font-size: 0.78rem; line-height: 1.6; color: var(--muted); }
+
+  ol { margin: 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.9rem; }
+  ol li { padding: 0 0 0.5rem; }
+  ol li::marker { color: var(--faint); }
+  ol b { color: var(--ink); font-weight: 500; }
+
+  /* ─── App: Personenliste ───────────────────────────────────────────────── */
+  /* min-height:0 ist nötig, damit .scroll innerhalb des Flex-Kindes scrollt
+     statt den ganzen Container aufzublähen. */
+  #app, .view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .grow { flex: 1; min-width: 0; }
+  .row.tight { margin-top: 0.55rem; }
+
+  .bar {
+    display: flex; align-items: center; gap: 0.7rem; flex: none;
+    padding: max(1rem, env(safe-area-inset-top)) 1.25rem 0.9rem;
+    border-bottom: 1px solid var(--line);
   }
-  textarea {
-    width: 100%; min-height: 8rem; margin-top: 1.25rem; padding: 0.8rem;
-    background: #fafafa; color: #444;
-    border: 1px solid var(--line); border-radius: 10px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.7rem; line-height: 1.5; resize: vertical;
+  .bar h1 { font-size: 1rem; }
+  .bar .sub { font-size: 0.75rem; color: var(--muted); font-weight: 400; }
+  .back {
+    padding: 0.2rem 0.55rem; font-size: 1.1rem; line-height: 1;
+    background: transparent; color: var(--ink); border: none;
   }
-  .status { margin-top: 1rem; font-size: 0.88rem; color: var(--muted); }
-  .status.ok { color: #111; }
-  .status.err { color: #c0392b; }
-  hr { border: none; border-top: 1px solid var(--line); margin: 2.5rem 0; }
-  .hidden { display: none; }
+
+  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .inner { max-width: 34rem; margin: 0 auto; padding: 0.5rem 1.25rem 1.5rem; }
+
+  .person {
+    display: flex; align-items: center; gap: 0.8rem; width: 100%;
+    padding: 0.85rem 0.25rem; border: none; border-bottom: 1px solid var(--line);
+    background: transparent; color: var(--ink); font: inherit; text-align: left;
+    cursor: pointer; border-radius: 0;
+  }
+  .person:active { opacity: 1; background: #fafafa; }
+  .avatar {
+    width: 2.1rem; height: 2.1rem; border-radius: 50%; flex: none;
+    background: var(--theirs); color: var(--muted);
+    display: grid; place-items: center;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
+  }
+  .person .who { flex: 1; min-width: 0; }
+  .person .name { font-weight: 550; display: block; }
+  .person .meta {
+    font-size: 0.76rem; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .chev { color: var(--faint); font-size: 0.9rem; }
+
+  .empty { color: var(--muted); font-size: 0.85rem; padding: 1.5rem 0.25rem; }
+
+  .self {
+    flex: none; border-top: 1px solid var(--line); background: #fff;
+    padding: 0.9rem 1.25rem calc(0.9rem + env(safe-area-inset-bottom));
+  }
+  .self .inner { padding: 0; display: flex; align-items: center; gap: 0.8rem; }
+  .self .who { flex: 1; min-width: 0; font-size: 0.82rem; }
+  .self .name { font-weight: 550; }
+  .self .meta { color: var(--muted); font-size: 0.76rem; }
+  .self button { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+  /* ─── App: Thread ──────────────────────────────────────────────────────── */
+  .msg { display: flex; margin-bottom: 0.6rem; }
+  .msg .bubble {
+    max-width: 78%; padding: 0.55rem 0.8rem; border-radius: 1.05rem;
+    background: var(--theirs); font-size: 0.92rem; line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+  .msg.mine { justify-content: flex-end; }
+  .msg.mine .bubble { background: var(--mine); color: #fff; }
+  .msg .from {
+    display: block; font-size: 0.7rem; font-weight: 600;
+    color: var(--muted); margin-bottom: 0.15rem;
+  }
+  .msg .title { display: block; font-weight: 600; }
+  .msg .link {
+    display: block; margin-top: 0.3rem; font-size: 0.76rem;
+    color: inherit; opacity: 0.75; overflow-wrap: anywhere;
+  }
+  .msg .stamp {
+    display: block; margin-top: 0.2rem; font-size: 0.68rem; opacity: 0.55;
+  }
+
+  .composer {
+    flex: none; border-top: 1px solid var(--line); background: #fff;
+    padding: 0.8rem 1.25rem calc(0.8rem + env(safe-area-inset-bottom));
+  }
+  .composer .inner { padding: 0; }
+  .composer textarea {
+    min-height: 2.6rem; max-height: 8rem; padding: 0.55rem 0.7rem;
+    border-radius: 1rem;
+  }
+  .composer .line { display: flex; gap: 0.6rem; align-items: flex-end; }
+  .composer button { padding: 0.55rem 1rem; border-radius: 1rem; flex: none; }
+  .composer .extra { margin-top: 0.6rem; }
+  .composer .extra input { padding: 0.45rem 0.7rem; font-size: 0.82rem; margin-bottom: 0.4rem; }
+  .composer .toggle {
+    background: transparent; border: none; color: var(--muted);
+    font-size: 0.75rem; padding: 0.35rem 0; font-weight: 450;
+  }
+  .count { font-size: 0.72rem; color: var(--faint); }
+
+  .hidden { display: none !important; }
+
+  /* iOS zoomt beim Fokus in jedes Feld, dessen Schrift unter 16px liegt — und
+     zoomt danach nicht von selbst wieder heraus. Deshalb ganz zum Schluss und
+     mit den spezifischeren Selektoren zusammen, sonst gewinnen die.
+     Nur auf Touch-Geräten; am Desktop bleibt die Skala wie entworfen. Die
+     Alternative wäre maximum-scale im Viewport — das nimmt Nutzern aber das
+     Zoomen komplett weg. */
+  @media (pointer: coarse) {
+    input, textarea, select,
+    .composer .extra input { font-size: 16px; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <div class="mark"><i></i></div>
-  <h1>pager</h1>
-  <p class="lede">Dieses Gerät für Nachrichten anmelden.</p>
 
-  <div id="ios">
-    <ol>
-      <li>Unten auf das <b>Teilen-Symbol</b> tippen</li>
-      <li><b>Zum Home-Bildschirm</b> wählen</li>
-      <li>pager <b>von dort</b> öffnen, nicht aus Safari</li>
-    </ol>
+<!-- ─── 1. Gate: iOS gibt Push nur vom Home-Bildschirm frei ──────────────── -->
+<section id="gate" class="card hidden">
+  <header><div class="mark"><i></i></div><h1>pager</h1></header>
+  <h2>Fast fertig</h2>
+  <ol>
+    <li>Unten auf das <b>Teilen-Symbol</b> tippen</li>
+    <li><b>Zum Home-Bildschirm</b> wählen</li>
+    <li>pager <b>von dort</b> öffnen, nicht aus Safari</li>
+  </ol>
+  <p class="hint">
+    iOS erlaubt Benachrichtigungen nur für Seiten, die vom Home-Bildschirm
+    starten. In Safari selbst geht es nicht — deshalb hier noch nichts weiter.
+  </p>
+</section>
+
+<!-- ─── 2. Login ─────────────────────────────────────────────────────────── -->
+<section id="login" class="card hidden">
+  <header><div class="mark"><i></i></div><h1>pager</h1></header>
+  <h2>Passwort</h2>
+  <label>
+    <span>Du hast es zusammen mit dem Link bekommen</span>
+    <input id="password" type="password" class="mono" autocomplete="current-password">
+  </label>
+  <button id="doLogin" class="wide">Weiter</button>
+  <div class="row"><span class="note" id="loginStatus"></span></div>
+</section>
+
+<!-- ─── 3. Identität ─────────────────────────────────────────────────────── -->
+<section id="identity" class="card hidden">
+  <header><div class="mark"><i></i></div><h1>pager</h1></header>
+  <h2>Wer bist du?</h2>
+  <label>
+    <span>Vor- und Nachname</span>
+    <input id="myName" placeholder="z. B. max kallina" autocomplete="name">
+  </label>
+  <label>
+    <span>Dieses Gerät</span>
+    <input id="myDevice" autocomplete="off">
+  </label>
+  <button id="doIdentity" class="wide">Weiter</button>
+  <div class="row"><span class="note" id="identityStatus"></span></div>
+  <p class="hint">
+    Der Name steht als Absender auf deinen Nachrichten. Er wird nicht geprüft —
+    im Space vertraut man sich.
+  </p>
+</section>
+
+<!-- ─── 4. App ───────────────────────────────────────────────────────────── -->
+<div id="app" class="hidden">
+
+  <!-- Personenliste -->
+  <div id="listView" class="view hidden">
+    <div class="bar">
+      <div class="mark"><i></i></div>
+      <h1>pager</h1>
+    </div>
+    <div class="scroll">
+      <div class="inner">
+        <div id="peopleList"></div>
+      </div>
+    </div>
+    <div class="self">
+      <div class="inner">
+        <div class="who">
+          <div class="name" id="selfName"></div>
+          <div class="meta" id="selfMeta"></div>
+        </div>
+        <button id="enable" class="ghost">Benachrichtigungen</button>
+      </div>
+      <div class="row tight"><span class="note" id="selfStatus"></span></div>
+    </div>
   </div>
 
-  <div class="hidden" id="main">
-    <button id="enable">Benachrichtigungen aktivieren</button>
-    <div class="status" id="status"></div>
-    <textarea id="output" class="hidden" readonly></textarea>
-    <button id="copy" class="ghost hidden">JSON kopieren</button>
+  <!-- Thread -->
+  <div id="threadView" class="view hidden">
+    <div class="bar">
+      <button class="back" id="back">←</button>
+      <div class="grow">
+        <h1 id="threadName"></h1>
+        <div class="sub" id="threadMeta"></div>
+      </div>
+    </div>
+    <div class="scroll" id="threadScroll">
+      <div class="inner" id="thread"></div>
+    </div>
+    <div class="composer">
+      <div class="inner">
+        <div class="line">
+          <textarea id="body" rows="1" placeholder="Nachricht"></textarea>
+          <button id="doSend">Senden</button>
+        </div>
+        <button class="toggle" id="moreToggle">+ Titel und Link</button>
+        <div class="extra hidden" id="extra">
+          <input id="title" placeholder="Titel — sonst steht dein Name da" autocomplete="off">
+          <input id="url" class="mono" placeholder="https://… beim Antippen öffnen" autocomplete="off">
+        </div>
+        <div class="row tight">
+          <span class="note grow" id="sendStatus"></span>
+          <span class="count" id="count"></span>
+        </div>
+      </div>
+    </div>
   </div>
-</main>
+</div>
 
 <script>
-const VAPID_PUBLIC = 'BOl2Q5j2ibc_3oCE7EXbc43rg5g_9bBgsNisaBXLkgbkt6XxvfoX7J3oEJFgXlQB8sueWB9gUfm1a-sYzVi-_lQ';
+const MAX_BODY = 1000;
 
 const $ = (id) => document.getElementById(id);
+const show = (id, visible = true) => $(id).classList.toggle('hidden', !visible);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-function setStatus(message, kind = '') {
-  $('status').textContent = message;
-  $('status').className = `status ${kind}`;
+function note(id, message, kind = '') {
+  $(id).textContent = message;
+  $(id).className = `note ${kind}`;
+}
+
+// Muss mit worker/index.js übereinstimmen: klein, einfach-leerzeichig.
+const normalize = (value) => value.trim().replace(/\s+/g, ' ').toLowerCase();
+
+function initials(person) {
+  const parts = person.trim().split(/\s+/);
+  return (parts[0]?.[0] || '') + (parts.at(-1)?.[0] || '') || '?';
+}
+
+function when(ts) {
+  const date = new Date(ts);
+  const today = new Date().toDateString() === date.toDateString();
+  return today
+    ? date.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })
+    : date.toLocaleDateString('de', { day: '2-digit', month: '2-digit' })
+      + ' ' + date.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' });
 }
 
 function urlBase64ToUint8Array(base64) {
@@ -107,75 +341,356 @@ function urlBase64ToUint8Array(base64) {
   return Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
 }
 
-// iOS liefert Push nur, wenn die Seite als Home-Screen-App läuft.
-const standalone = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-if (!isIOS || standalone) {
-  $('ios').classList.add('hidden');
-  $('main').classList.remove('hidden');
+function guessDevice() {
+  const ua = navigator.userAgent;
+  if (/iPhone/.test(ua)) return 'iphone';
+  if (/iPad/.test(ua)) return 'ipad';
+  if (/Android/.test(ua)) return 'android';
+  if (/Mac/.test(ua)) return 'mac';
+  if (/Windows/.test(ua)) return 'pc';
+  return 'gerät';
 }
 
-if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-  $('ios').classList.add('hidden');
-  $('main').classList.remove('hidden');
-  $('enable').disabled = true;
-  setStatus('Dieser Browser kann kein Web Push.', 'err');
+// ─── Zustand ─────────────────────────────────────────────────────────────────
+const store = {
+  get password() { return localStorage.getItem('pager.password') || ''; },
+  set password(v) { localStorage.setItem('pager.password', v); },
+  get me() { return localStorage.getItem('pager.me') || ''; },
+  set me(v) { localStorage.setItem('pager.me', v); },
+  get device() { return localStorage.getItem('pager.device') || ''; },
+  set device(v) { localStorage.setItem('pager.device', v); },
+};
+
+let vapidPublic = '';
+let openThread = null;   // Personenschlüssel, '*' ist „alle"
+let people = [];
+
+// ─── API ─────────────────────────────────────────────────────────────────────
+async function api(path, body) {
+  const response = await fetch(`api/${path}`, {
+    method: body === undefined ? 'GET' : 'POST',
+    headers: {
+      Authorization: `Bearer ${store.password}`,
+      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `Fehler ${response.status}`);
+  return data;
 }
 
-async function show(subscription) {
-  $('output').value = JSON.stringify(subscription.toJSON(), null, 2);
-  $('output').classList.remove('hidden');
-  $('copy').classList.remove('hidden');
-  $('enable').textContent = 'Neu anmelden';
+// ─── Personenliste ───────────────────────────────────────────────────────────
+async function refreshPeople() {
+  people = await api('people');
+  const others = people.filter((p) => p.person !== store.me);
+
+  const rows = [];
+
+  if (people.length) {
+    rows.push(`
+      <button class="person" data-person="*">
+        <div class="avatar">*</div>
+        <div class="who">
+          <span class="name">alle</span>
+          <span class="meta">${people.length} ${people.length === 1 ? 'Person' : 'Personen'}</span>
+        </div>
+        <span class="chev">›</span>
+      </button>`);
+  }
+
+  for (const person of people) {
+    const self = person.person === store.me;
+    rows.push(`
+      <button class="person" data-person="${esc(person.person)}">
+        <div class="avatar">${esc(initials(person.person))}</div>
+        <div class="who">
+          <span class="name">${esc(person.person)}${self ? ' · du' : ''}</span>
+          <span class="meta">${person.devices} ${person.devices === 1 ? 'Gerät' : 'Geräte'}</span>
+        </div>
+        <span class="chev">›</span>
+      </button>`);
+  }
+
+  $('peopleList').innerHTML = rows.length
+    ? rows.join('')
+    : `<div class="empty">Noch niemand hat Benachrichtigungen aktiviert.
+       Du kannst erst senden, wenn mindestens ein Gerät angemeldet ist.</div>`;
+
+  if (!others.length && people.length) {
+    $('peopleList').insertAdjacentHTML('beforeend',
+      '<p class="hint">Nur du bist bisher angemeldet. Schick den Link weiter.</p>');
+  }
 }
 
-$('copy').onclick = async () => {
+$('peopleList').onclick = (event) => {
+  const row = event.target.closest('.person');
+  if (!row) return;
+  openThread = row.dataset.person;
+  showThread();
+};
+
+// ─── Thread ──────────────────────────────────────────────────────────────────
+async function showThread() {
+  show('listView', false);
+  show('threadView');
+  $('threadName').textContent = openThread === '*' ? 'alle' : openThread;
+
+  const target = people.find((p) => p.person === openThread);
+  $('threadMeta').textContent = openThread === '*'
+    ? `${people.length} ${people.length === 1 ? 'Person' : 'Personen'}`
+    : target ? `${target.devices} ${target.devices === 1 ? 'Gerät' : 'Geräte'}` : 'keine Geräte';
+
+  $('thread').innerHTML = '<div class="empty">Lade…</div>';
+  await refreshThread();
+  $('body').focus();
+}
+
+async function refreshThread() {
+  if (!openThread) return;
+  const params = new URLSearchParams({ me: store.me, with: openThread });
+  const messages = await api(`log?${params}`);
+
+  $('thread').innerHTML = messages.length
+    ? messages.map((m) => {
+        const mine = m.sender === store.me;
+        const showFrom = !mine && openThread === '*';
+        const status = mine
+          ? ` · ${m.delivered === m.total ? 'zugestellt' : `${m.delivered} von ${m.total}`}`
+          : '';
+        return `
+          <div class="msg ${mine ? 'mine' : ''}">
+            <div class="bubble">
+              ${showFrom ? `<span class="from">${esc(m.sender)}</span>` : ''}
+              ${m.title ? `<span class="title">${esc(m.title)}</span>` : ''}
+              ${esc(m.body).replace(/\n/g, '<br>')}
+              ${m.url ? `<a class="link" href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.url)}</a>` : ''}
+              <span class="stamp">${esc(when(m.sent_at))}${status}</span>
+            </div>
+          </div>`;
+      }).join('')
+    : '<div class="empty">Noch nichts. Schreib die erste Nachricht.</div>';
+
+  $('threadScroll').scrollTop = $('threadScroll').scrollHeight;
+}
+
+$('back').onclick = async () => {
+  openThread = null;
+  show('threadView', false);
+  show('listView');
+  await refreshPeople();
+};
+
+// ─── Senden ──────────────────────────────────────────────────────────────────
+$('body').oninput = () => {
+  const textarea = $('body');
+  textarea.style.height = 'auto';
+  textarea.style.height = `${Math.min(textarea.scrollHeight, 128)}px`;
+  const left = MAX_BODY - textarea.value.length;
+  $('count').textContent = left < 200 ? `${left}` : '';
+};
+
+$('moreToggle').onclick = () => {
+  const open = $('extra').classList.toggle('hidden');
+  $('moreToggle').textContent = open ? '+ Titel und Link' : '– Titel und Link';
+};
+
+$('doSend').onclick = async () => {
+  const body = $('body').value.trim();
+  if (!body) return;
+
+  $('doSend').disabled = true;
+  note('sendStatus', 'Sende…');
   try {
-    await navigator.clipboard.writeText($('output').value);
-    setStatus('Kopiert.', 'ok');
-  } catch {
-    $('output').select();
-    setStatus('Markiert — bitte manuell kopieren.');
+    const result = await api('send', {
+      from: store.me,
+      to: openThread,
+      title: $('title').value,
+      body,
+      url: $('url').value,
+    });
+    $('body').value = '';
+    $('body').style.height = 'auto';
+    $('title').value = '';
+    $('url').value = '';
+    $('count').textContent = '';
+    note('sendStatus', result.dead ? `${result.dead} totes Gerät entfernt` : '', 'ok');
+    await refreshThread();
+  } catch (err) {
+    note('sendStatus', err.message, 'err');
+  } finally {
+    $('doSend').disabled = false;
   }
 };
 
+// ─── Dieses Gerät ────────────────────────────────────────────────────────────
+const standalone = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+const pushable = 'serviceWorker' in navigator && 'PushManager' in window;
+
+async function currentSubscription() {
+  if (!pushable) return null;
+  const registration = await navigator.serviceWorker.getRegistration();
+  return registration?.pushManager.getSubscription() ?? null;
+}
+
+async function refreshSelf() {
+  $('selfName').textContent = store.me;
+  const subscription = await currentSubscription();
+  $('selfMeta').textContent = subscription
+    ? `${store.device} · empfängt`
+    : `${store.device} · sendet nur`;
+  $('enable').textContent = subscription ? 'Abmelden' : 'Aktivieren';
+}
+
 $('enable').onclick = async () => {
   $('enable').disabled = true;
-  setStatus('Registriere…');
   try {
-    const registration = await navigator.serviceWorker.register('sw.js');
-    await navigator.serviceWorker.ready;
+    const existing = await currentSubscription();
 
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') throw new Error(`Berechtigung: ${permission}`);
+    if (existing) {
+      await api('unregister', { endpoint: existing.endpoint });
+      await existing.unsubscribe();
+      note('selfStatus', 'Dieses Gerät empfängt nichts mehr.', 'ok');
+    } else {
+      if (!pushable) throw new Error('Dieser Browser kann kein Web Push.');
+      note('selfStatus', 'Melde an…');
 
-    const existing = await registration.pushManager.getSubscription();
-    if (existing) await existing.unsubscribe();
+      const registration = await navigator.serviceWorker.register('sw.js');
+      await navigator.serviceWorker.ready;
 
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
-    });
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') throw new Error(`Berechtigung: ${permission}`);
 
-    await show(subscription);
-    setStatus('Angemeldet. JSON kopieren und weitergeben.', 'ok');
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublic),
+      });
+
+      await api('register', {
+        name: store.me,
+        device: store.device,
+        subscription: subscription.toJSON(),
+      });
+      note('selfStatus', 'Angemeldet. Dieses Gerät empfängt jetzt.', 'ok');
+    }
+
+    await refreshSelf();
+    await refreshPeople();
   } catch (err) {
-    setStatus(err.message, 'err');
+    note('selfStatus', err.message, 'err');
   } finally {
     $('enable').disabled = false;
   }
 };
 
-// Schon angemeldet? Dann JSON direkt zeigen.
-(async () => {
-  if (!('serviceWorker' in navigator)) return;
-  const registration = await navigator.serviceWorker.getRegistration();
-  const existing = await registration?.pushManager.getSubscription();
-  if (existing) {
-    await show(existing);
-    setStatus('Dieses Gerät ist bereits angemeldet.', 'ok');
+// ─── Ablauf ──────────────────────────────────────────────────────────────────
+function showOnly(id) {
+  for (const section of ['gate', 'login', 'identity', 'app']) show(section, section === id);
+}
+
+async function enterApp() {
+  showOnly('app');
+  show('threadView', false);
+  show('listView');
+  await refreshSelf();
+  await refreshPeople();
+}
+
+$('doLogin').onclick = async () => {
+  const password = $('password').value.trim();
+  if (!password) return;
+  $('doLogin').disabled = true;
+  note('loginStatus', 'Prüfe…');
+  try {
+    store.password = password;
+    await api('login', {});
+    note('loginStatus', '');
+    await afterLogin();
+  } catch (err) {
+    store.password = '';
+    note('loginStatus', err.message, 'err');
+  } finally {
+    $('doLogin').disabled = false;
   }
+};
+
+async function afterLogin() {
+  if (store.me) return enterApp();
+
+  showOnly('identity');
+  $('myName').value = store.me;
+  $('myDevice').value = store.device || guessDevice();
+
+  // Namen erst prüfen, wenn wir die Liste haben — sonst tippt jemand
+  // „max kallina" und wird versehentlich zu einer zweiten Person.
+  try { people = await api('people'); } catch { people = []; }
+  $('myName').focus();
+}
+
+$('myName').oninput = () => {
+  const match = people.find((p) => p.person === normalize($('myName').value));
+  note('identityStatus', match
+    ? `Es gibt schon ${match.devices} ${match.devices === 1 ? 'Gerät' : 'Geräte'} für „${match.person}". Ist das dein weiteres Gerät?`
+    : '');
+};
+
+$('doIdentity').onclick = async () => {
+  const me = normalize($('myName').value);
+  if (!me) return note('identityStatus', 'Bitte gib deinen Namen ein.', 'err');
+  if (!me.includes(' ')) {
+    return note('identityStatus', 'Bitte Vor- und Nachname, damit man dich zuordnen kann.', 'err');
+  }
+  store.me = me;
+  store.device = normalize($('myDevice').value) || guessDevice();
+  await enterApp();
+};
+
+// Der Service Worker meldet eingehende Pushes an offene Fenster — damit
+// aktualisiert sich ein offener Thread, ohne dass wir pollen müssen.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type === 'push' && openThread) refreshThread().catch(() => {});
+  });
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  (openThread ? refreshThread() : refreshPeople()).catch(() => {});
+});
+
+(async () => {
+  // iOS gibt Push nur frei, wenn die Seite vom Home-Bildschirm startet. Wer
+  // sich vorher in Safari anmeldet, verliert alles beim Hinzufügen — die PWA
+  // bekommt einen eigenen Storage. Deshalb hier gar nichts anderes zeigen.
+  if (isIOS && !standalone) return showOnly('gate');
+
+  // Passwort aus dem Einladungslink: #k=… Fragmente gehen nie an den Server.
+  const fragment = new URLSearchParams(location.hash.slice(1));
+  if (fragment.get('k')) {
+    store.password = fragment.get('k');
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
+  try {
+    vapidPublic = (await (await fetch('api/config')).json()).vapidPublic;
+  } catch {
+    document.body.innerHTML = '<section class="card"><p class="note err">Server nicht erreichbar.</p></section>';
+    return;
+  }
+
+  if (!store.password) return showOnly('login');
+
+  try {
+    await api('login', {});
+  } catch {
+    store.password = '';
+    showOnly('login');
+    note('loginStatus', 'Bitte Passwort eingeben.', '');
+    return;
+  }
+
+  await afterLogin();
 })();
 </script>
 </body>

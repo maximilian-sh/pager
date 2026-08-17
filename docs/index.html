@@ -38,11 +38,10 @@
   }
 
   header { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 3rem; }
-  .mark {
-    width: 1.9rem; height: 1.9rem; border-radius: 50%;
-    border: 1.5px solid var(--ink); display: grid; place-items: center; flex: none;
-  }
-  .mark i { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--ink); }
+  /* Dasselbe Icon wie auf dem Home-Bildschirm — nicht nachgebaut. Die Datei
+     bringt eigenen Rand mit, deshalb grösser gesetzt und links ausgeglichen,
+     damit die Grafik optisch am Textrand sitzt. */
+  .mark { width: 2.6rem; height: 2.6rem; flex: none; margin: -0.3rem -0.25rem -0.3rem -0.3rem; }
   h1 { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; flex: 1; }
 
   h2 {
@@ -202,7 +201,7 @@
 
 <!-- ─── 1. Gate: iOS gibt Push nur vom Home-Bildschirm frei ──────────────── -->
 <section id="gate" class="card hidden">
-  <header><div class="mark"><i></i></div><h1>pager</h1></header>
+  <header><img class="mark" src="icon-192.png" alt=""><h1>pager</h1></header>
   <h2>Fast fertig</h2>
   <ol>
     <li>Unten auf das <b>Teilen-Symbol</b> tippen</li>
@@ -217,7 +216,7 @@
 
 <!-- ─── 2. Login ─────────────────────────────────────────────────────────── -->
 <section id="login" class="card hidden">
-  <header><div class="mark"><i></i></div><h1>pager</h1></header>
+  <header><img class="mark" src="icon-192.png" alt=""><h1>pager</h1></header>
   <h2>Passwort</h2>
   <label>
     <span>Du hast es zusammen mit dem Link bekommen</span>
@@ -229,7 +228,7 @@
 
 <!-- ─── 3. Identität ─────────────────────────────────────────────────────── -->
 <section id="identity" class="card hidden">
-  <header><div class="mark"><i></i></div><h1>pager</h1></header>
+  <header><img class="mark" src="icon-192.png" alt=""><h1>pager</h1></header>
   <h2>Wer bist du?</h2>
   <label>
     <span>Vor- und Nachname</span>
@@ -253,7 +252,7 @@
   <!-- Personenliste -->
   <div id="listView" class="view hidden">
     <div class="bar">
-      <div class="mark"><i></i></div>
+      <img class="mark" src="icon-192.png" alt="">
       <h1>pager</h1>
     </div>
     <div class="scroll">

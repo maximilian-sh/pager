@@ -3,20 +3,15 @@
   Quelle für hero.png. Neu rendern mit:
 
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-      --headless --disable-gpu --screenshot=.github/hero.png \
-      --window-size=2400,1000 --hide-scrollbars \
-      file://$PWD/.github/hero.html
+      --headless --disable-gpu --hide-scrollbars \
+      --screenshot=.github/hero.png --window-size=2400,1000 \
+      --default-background-color=FFFFFF \
+      "file://$PWD/.github/hero.html"
 
-  Palette und Marke sind identisch zu docs/index.html — wer die App ändert,
-  sollte auch hier durchziehen.
+  Das Icon kommt direkt aus docs/ — eine Quelle, kein Nachbau.
 -->
 <meta charset="utf-8">
 <style>
-  :root {
-    --ink: #111;
-    --muted: #8a8a8a;
-    --tile: #f4f4f4;
-  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 2400px; height: 1000px; }
   body {
@@ -27,39 +22,15 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Dieselbe Marke wie in der App: Ring mit Punkt. */
-  .tile {
-    width: 336px; height: 336px; border-radius: 80px;
-    background: var(--tile);
-    display: grid; place-items: center;
-    margin-bottom: 92px;
-  }
-  .mark {
-    width: 174px; height: 174px; border-radius: 50%;
-    border: 12px solid var(--ink);
-    display: grid; place-items: center;
-  }
-  .mark i { width: 47px; height: 47px; border-radius: 50%; background: var(--ink); }
+  /* Die Icon-Datei bringt reichlich eigenen Rand mit — deshalb deutlich
+     grösser gesetzt, als die sichtbare Grafik am Ende wirkt. */
+  .icon { width: 540px; height: 540px; margin-bottom: -20px; }
 
   h1 {
     font-size: 232px; font-weight: 600; letter-spacing: -0.045em;
-    color: var(--ink); line-height: 1;
-  }
-
-  .rule {
-    width: 268px; height: 6px; background: var(--ink);
-    margin: 66px 0 50px; border-radius: 3px;
-  }
-
-  .tagline {
-    font-size: 37px; font-weight: 500; letter-spacing: 0.34em;
-    color: var(--muted); text-transform: uppercase;
-    /* letter-spacing hängt rechts an — optisch zentrieren. */
-    text-indent: 0.34em;
+    color: #111; line-height: 1;
   }
 </style>
 
-<div class="tile"><div class="mark"><i></i></div></div>
+<img class="icon" src="../docs/icon-512.png" alt="">
 <h1>pager</h1>
-<div class="rule"></div>
-<div class="tagline">Kurze Nachrichten · aufs Handy</div>

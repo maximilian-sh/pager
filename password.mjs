@@ -8,9 +8,9 @@ import { wrangler, box, info, generatePassword, sha256Hex, putSecrets, spaceUrl 
 
 const password = generatePassword();
 
-console.log('\n\x1b[1mpager\x1b[0m — neues Passwort');
-box('Passwort', password);
-info('Jetzt sichern. Gespeichert wird nur der Hash.');
+console.log('\n\x1b[1mpager\x1b[0m — new password');
+box('Password', password);
+info('Save it now. Only the hash is stored.');
 
 await putSecrets({ PAGER_PASSWORD_HASH: await sha256Hex(password) });
 
@@ -20,13 +20,12 @@ const CONFIG = new URL('./wrangler.jsonc', import.meta.url);
 const url = await spaceUrl(CONFIG, await wrangler(['deploy', '--dry-run'], { allowFail: true }));
 
 console.log(`
-\x1b[1mGesetzt.\x1b[0m Das alte Passwort gilt ab sofort nicht mehr.
+\x1b[1mDone.\x1b[0m The old password stops working immediately.
 
-Neuer Einladungslink:
+New invite link:
 
-  ${url ? `${url}/#k=${password}` : `<deine-worker-url>/#k=${password}`}
+  ${url ? `${url}/#k=${password}` : `<your-worker-url>/#k=${password}`}
 
-\x1b[2mAngemeldete Geräte empfangen weiter — sie brauchen das Passwort nur, um die
-App zu öffnen. Wer bereits eingeloggt ist, wird beim nächsten Start ausgesperrt
-und muss den neuen Link antippen.\x1b[0m
+\x1b[2mRegistered devices keep receiving — the password only opens the app. Anyone
+already signed in is locked out on next launch and needs the new link.\x1b[0m
 `);

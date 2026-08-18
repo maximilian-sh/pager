@@ -38,7 +38,7 @@ export function wrangler(args, { interactive = false, tee = false, allowFail = f
     child.on('error', reject);
     child.on('close', (code) => {
       if (code === 0 || allowFail) return resolve(out);
-      reject(new Error(`wrangler ${args.join(' ')} ist fehlgeschlagen:\n${out}`));
+      reject(new Error(`wrangler ${args.join(' ')} failed:\n${out}`));
     });
   });
 }
@@ -112,7 +112,7 @@ export async function writeConfig(configPath, { databaseId, domain }) {
 
   config = config.replace(/("database_id":\s*)"[^"]*"/, `$1"${databaseId}"`);
   if (!config.includes(databaseId)) {
-    throw new Error('database_id konnte nicht in wrangler.jsonc eingetragen werden.');
+    throw new Error('Could not write database_id into wrangler.jsonc.');
   }
 
   // Eine eigene Domain schaltet workers.dev ab — sonst hinge der Space an zwei
@@ -137,11 +137,11 @@ export async function askDomain(argv = process.argv) {
 
   // Beide Wege durch dieselbe Prüfung — sonst umgeht das Flag die Validierung.
   const answer = flag
-    || await ask('   Eigene Domain? (z. B. pager.example.com — leer für workers.dev)  ');
+    || await ask('   Custom domain? (e.g. pager.example.com — blank for workers.dev)  ');
 
   if (!answer) return '';
   if (!looksLikeHostname(answer)) {
-    throw new Error(`„${answer}" sieht nicht wie ein Hostname aus. Abgebrochen, es wurde noch nichts geändert.`);
+    throw new Error(`"${answer}" does not look like a hostname. Stopped — nothing has been changed yet.`);
   }
   return answer.toLowerCase();
 }
@@ -154,14 +154,14 @@ export async function askDomain(argv = process.argv) {
 export async function askSubject(accountEmail, argv = process.argv) {
   const flag = argv.find((a) => a.startsWith('--email='))?.slice(8).trim();
   const chosen = flag || await ask(accountEmail
-    ? `   Kontaktadresse für Apple und Google? (Enter für ${accountEmail})  `
-    : '   Kontaktadresse für Apple und Google?  ') || accountEmail;
+    ? `   Contact address for Apple and Google? (Enter for ${accountEmail})  `
+    : '   Contact address for Apple and Google?  ') || accountEmail;
 
   if (!chosen) {
-    throw new Error('Ohne Kontaktadresse geht es nicht — die Push-Dienste verlangen ein VAPID-Subject.');
+    throw new Error('A contact address is required — the push services need a VAPID subject.');
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(chosen)) {
-    throw new Error(`„${chosen}" ist keine E-Mail-Adresse. Abgebrochen, es wurde noch nichts geändert.`);
+    throw new Error(`"${chosen}" is not an email address. Stopped — nothing has been changed yet.`);
   }
   return chosen;
 }

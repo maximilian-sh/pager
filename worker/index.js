@@ -49,9 +49,9 @@ async function register(request, env) {
   const { name: input, device, subscription } = await request.json();
 
   const person = name(input);
-  if (!person) return json({ error: 'Name fehlt' }, 400);
+  if (!person) return json({ error: 'Name missing' }, 400);
   if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
-    return json({ error: 'Es fehlt endpoint, keys.p256dh oder keys.auth' }, 400);
+    return json({ error: 'Missing endpoint, keys.p256dh or keys.auth' }, 400);
   }
 
   // Dasselbe Gerät meldet sich neu an → aktualisieren statt verdoppeln.
@@ -61,7 +61,7 @@ async function register(request, env) {
     ON CONFLICT(endpoint) DO UPDATE SET
       person = ?1, device = ?2, p256dh = ?4, auth = ?5
   `).bind(
-    person, name(device) || 'gerät',
+    person, name(device) || 'device',
     subscription.endpoint, subscription.keys.p256dh, subscription.keys.auth,
     Date.now(),
   ).run();
@@ -71,7 +71,7 @@ async function register(request, env) {
 
 async function unregister(request, env) {
   const { endpoint } = await request.json();
-  if (!endpoint) return json({ error: 'endpoint fehlt' }, 400);
+  if (!endpoint) return json({ error: 'endpoint missing' }, 400);
   await env.DB.prepare('DELETE FROM devices WHERE endpoint = ?').bind(endpoint).run();
   return json({ ok: true });
 }
@@ -97,18 +97,18 @@ async function send(request, env) {
   const body = clean(payload.body);
   const url = clean(payload.url);
 
-  if (!from) return json({ error: 'Absender fehlt' }, 400);
-  if (!to) return json({ error: 'Empfänger fehlt' }, 400);
-  if (!body) return json({ error: 'Nachricht ist leer' }, 400);
+  if (!from) return json({ error: 'Sender missing' }, 400);
+  if (!to) return json({ error: 'Recipient missing' }, 400);
+  if (!body) return json({ error: 'Message is empty' }, 400);
   if (body.length > MAX_BODY) {
-    return json({ error: `Nachricht ist zu lang (max. ${MAX_BODY} Zeichen)` }, 400);
+    return json({ error: `Message is too long (max. ${MAX_BODY} characters)` }, 400);
   }
 
   const { results: devices } = to === '*'
     ? await env.DB.prepare('SELECT * FROM devices').all()
     : await env.DB.prepare('SELECT * FROM devices WHERE person = ?').bind(to).all();
 
-  if (!devices.length) return json({ error: 'Keine angemeldeten Geräte für diesen Empfänger' }, 400);
+  if (!devices.length) return json({ error: 'No registered devices for this recipient' }, 400);
 
   // Eine Notification zeigt auf iOS nur Titel und Text — ein eigenes
   // „von"-Feld gibt es nicht. Ohne eigenen Titel steht deshalb der Absender
@@ -213,7 +213,7 @@ export default {
     }
 
     if (!await authorized(request, env)) {
-      return json({ error: 'Falsches Passwort' }, 401);
+      return json({ error: 'Wrong password' }, 401);
     }
 
     try {

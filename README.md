@@ -4,10 +4,10 @@
 
 <br>
 
-**Kurze Nachrichten aufs Handy. Ohne fremden Dienst dazwischen.**
-Ein Passwort, ein Link, und dein iPhone brummt.
+**Short messages to your phone. No third party in between.**
+One password, one link, and your iPhone buzzes.
 
-<sub>Web Push · PWA statt App Store · kein Apple-Developer-Account · null Abhängigkeiten</sub>
+<sub>Web Push · a PWA instead of an App Store listing · no Apple Developer account · zero dependencies</sub>
 
 <br>
 
@@ -15,7 +15,7 @@ Ein Passwort, ein Link, und dein iPhone brummt.
 
 <div align="center">
 
-**Personen statt Geräte**  ·  **Apple liest nicht mit**  ·  **Verlauf als Thread**  ·  **ein Befehl zum Aufsetzen**
+**People, not devices**  ·  **Apple can't read it**  ·  **History as a thread**  ·  **one command to set up**
 
 </div>
 
@@ -27,8 +27,8 @@ Ein Passwort, ein Link, und dein iPhone brummt.
 
 <div align="center">
 
-Ein **Space** ist eine eigene Instanz mit einem Passwort.
-Wer drin ist, darf senden. Wer sich anmeldet, kann empfangen.
+A **space** is your own instance with one password.
+Whoever is in it may send. Whoever registers can receive.
 
 </div>
 
@@ -38,23 +38,23 @@ Wer drin ist, darf senden. Wer sich anmeldet, kann empfangen.
 <tr>
 <td width="50%" valign="top">
 
-**📨 &nbsp; Ich wurde eingeladen**
+**📨 &nbsp; I was invited**
 
-Link antippen · **zum Home-Bildschirm** · von dort öffnen · Namen eingeben · erlauben.
+Tap the link · **Add to Home Screen** · open it from there · enter your name · allow notifications.
 
-Am Rechner reicht der Link. Dann sendest du nur, das genügt oft.
+On a computer the link is enough. You can only send then, which is often all you need.
 
 </td>
 <td width="50%" valign="top">
 
-**🔧 &nbsp; Ich mache einen Space auf**
+**🔧 &nbsp; I'm opening a space**
 
 ```
 npm install
 npm run setup
 ```
 
-Schlüssel, Passwort, Datenbank, Deploy — ein Befehl, ein Browser-Login.
+Keys, password, database, deploy — one command, one browser login.
 
 </td>
 </tr>
@@ -68,9 +68,9 @@ Schlüssel, Passwort, Datenbank, Deploy — ein Befehl, ein Browser-Login.
 
 <div align="center">
 
-Adressiert wird die **Person**. Eine Nachricht an `maximilian kallina` geht an all seine Geräte —<br>
-egal ob du sie vom Mac oder vom iPhone schickst. Deshalb ist der Verlauf zwischen zwei<br>
-Leuten automatisch ein Thread, ohne dass irgendwo ein Chat gebaut wurde.
+You address a **person**, not a device. A message to `maximilian kallina` reaches all of his devices —<br>
+whether you send it from your Mac or your iPhone. That is why the history between two<br>
+people is a thread by itself, without anyone building a chat.
 
 </div>
 
@@ -80,266 +80,263 @@ Leuten automatisch ein Thread, ohne dass irgendwo ein Chat gebaut wurde.
 
 <br>
 
-# Technik
+# How it works
 
-*Wie es gebaut ist, was wo läuft, und welche Entscheidungen dahinterstehen.*
+*What is built how, what runs where, and the reasoning behind it.*
 
 <br>
 
-## Aufbau
+## Architecture
 
-Ein einziger Cloudflare Worker liefert **beides** aus: die Seite und die API.
-Kein GitHub Pages daneben, kein CORS, kein zweiter Deploy, der synchron bleiben
-muss. Statische Dateien werden direkt aus `web/` bedient und erreichen den
-Worker-Code gar nicht erst — nur Pfade ohne passende Datei, also `/api/*`,
-laufen durch `worker/index.js`.
+A single Cloudflare Worker serves **both** the page and the API. No GitHub Pages
+alongside it, no CORS, no second deploy that has to stay in sync. Static files
+are served straight from `web/` and never reach the worker code — only paths
+without a matching file, meaning `/api/*`, run through `worker/index.js`.
 
 ```
 pager/
 ├─ worker/
-│  ├─ index.js        Router, Auth, Geräte, Senden, Verlauf
-│  ├─ push.js         RFC 8291 (aes128gcm) + RFC 8292 (VAPID) — reines WebCrypto
+│  ├─ index.js        router, auth, devices, sending, history
+│  ├─ push.js         RFC 8291 (aes128gcm) + RFC 8292 (VAPID) — plain WebCrypto
 │  └─ schema.sql      D1: devices, messages
 ├─ web/
-│  ├─ index.html      die ganze App: Gate, Login, Identität, Personen, Threads
-│  ├─ sw.js           Service Worker — zeigt die Notification, weckt offene Fenster
+│  ├─ index.html      the whole app: gate, login, identity, people, threads
+│  ├─ sw.js           service worker — shows the notification, wakes open windows
 │  └─ manifest.webmanifest
-├─ setup.mjs          richtet einen neuen Space ein
-├─ password.mjs       setzt ein neues Space-Passwort
-├─ tools.mjs          gemeinsame Bausteine der beiden Skripte
+├─ setup.mjs          sets up a new space
+├─ password.mjs       sets a new space password
+├─ tools.mjs          shared pieces of both scripts
 └─ wrangler.jsonc
 ```
 
-Rund 1300 Zeilen insgesamt, ohne eine einzige Laufzeit-Abhängigkeit.
-`wrangler` ist die einzige devDependency.
+Around 1500 lines in total, without a single runtime dependency. `wrangler` is
+the only devDependency.
 
 <br>
 
-## Wie eine Nachricht läuft
+## How a message travels
 
 ```
-Gerät meldet sich an  →  Subscription landet in D1
-                             ↓
-Du tippst Text  →  Worker verschlüsselt  →  Apple  →  Gerät
-                                                        ↓
-                                                sw.js zeigt sie an
+Device registers   →  subscription lands in D1
+                          ↓
+You type text  →  worker encrypts  →  Apple  →  device
+                                                  ↓
+                                          sw.js shows it
 ```
 
-Verschlüsselt wird im Worker, entschlüsselt erst auf dem Gerät. Apple und
-Google leiten nur weiter und können nicht mitlesen — das ist keine Zusicherung
-von uns, sondern die Bauart von Web Push.
+Encryption happens in the worker, decryption only on the device. Apple and
+Google merely relay and cannot read along — that is not a promise from us but
+how Web Push is built.
 
-**Das ist ausdrücklich keine Ende-zu-Ende-Verschlüsselung.** Verschlüsselt wird
-erst *ab* dem Worker, und der sieht jede Nachricht im Klartext, bevor er sie
-verpackt — er schreibt sie auch so in die Datenbank. Geschützt ist die Strecke
-zu den Push-Diensten, nicht der Inhalt vor dem Betreiber des Space. Wer Zugriff
-auf das Cloudflare-Konto hat, liest den gesamten Verlauf mit.
+**This is expressly not end-to-end encryption.** Encryption starts *at* the
+worker, and the worker sees every message in plain text before it wraps it — it
+also writes it to the database that way. What is protected is the leg to the
+push services, not the content from the operator of the space. Anyone with
+access to the Cloudflare account reads the entire history.
 
 <br>
 
 ## API
 
-Alles unter `/api/`, damit nichts mit Dateipfaden kollidiert. Alle Routen außer
-`/api/config` verlangen `Authorization: Bearer <passwort>`.
+Everything under `/api/`, so nothing collides with file paths. Every route
+except `/api/config` requires `Authorization: Bearer <password>`.
 
-| Route | Zweck |
+| Route | Purpose |
 |---|---|
-| `GET /api/config` | VAPID Public Key — per Definition öffentlich |
-| `POST /api/login` | Passwort prüfen |
-| `POST /api/register` | `{name, device, subscription}` → Upsert auf `endpoint` |
-| `POST /api/unregister` | dieses Gerät austragen |
-| `GET /api/people` | Personen + Gerätezahl |
+| `GET /api/config` | VAPID public key — public by definition |
+| `POST /api/login` | check the password |
+| `POST /api/register` | `{name, device, subscription}` → upsert on `endpoint` |
+| `POST /api/unregister` | remove this device |
+| `GET /api/people` | people + device count |
 | `POST /api/send` | `{from, to, title, body, url}` |
-| `GET /api/log` | Verlauf, `?me=…&with=…` |
+| `GET /api/log` | history, `?me=…&with=…` |
 
 <br>
 
-## Datenmodell
+## Data model
 
-Namen sind durchgehend **klein und einfach-leerzeichig**. Das ist keine Kosmetik:
-dadurch ist der Anzeigename zugleich der Schlüssel, und es gibt keine zweite
-Schreibweise, die auseinanderlaufen könnte. `  MAXIMILIAN   Kallina ` und
-`maximilian kallina` sind dieselbe Person, ohne dass irgendwo entschieden werden muss,
-welche Variante „gewinnt".
+Names are **lower case with single spaces** throughout. That is not cosmetic:
+it makes the display name the key as well, so there is no second spelling that
+could drift apart. `  MAXIMILIAN   Kallina ` and `maximilian kallina` are the
+same person, without anything having to decide which variant "wins".
 
 ```sql
 devices   person, device, endpoint UNIQUE, p256dh, auth, created_at
 messages  sender, recipient, title, body, url, sent_at, delivered, total
 ```
 
-`endpoint UNIQUE` macht die Re-Registrierung desselben Geräts zum Upsert statt
-zum Duplikat. `recipient = '*'` ist der Broadcast und liest sich in der
-Oberfläche wie ein Gruppenchat.
+`endpoint UNIQUE` turns re-registering the same device into an upsert instead
+of a duplicate. `recipient = '*'` is the broadcast and reads like a group chat
+in the interface.
 
-**D1 statt KV.** KV erlaubt nur einen Schreibvorgang pro Sekunde und Schlüssel
-und ist eventually consistent — für einen gemeinsamen Verlauf zu fragil. D1
-gibt geordnete Abfragen, ist stark konsistent und im Free Tier großzügiger.
+**D1 instead of KV.** KV allows only one write per second per key and is
+eventually consistent — too fragile for a shared history. D1 gives ordered
+queries, is strongly consistent, and is more generous on the free tier.
 
 <br>
 
 ## Auth
 
-Das **Passwort ist selbst das Bearer-Token**, es gibt keine Session-Schicht.
-Ein Session-Token wäre hier exakt so sicher wie das Passwort, das es ersetzt:
-beides liegt im `localStorage`, beides gewährt dasselbe, keins ist einzeln
-widerrufbar. Der Server hält nur einen SHA-256-Hash und vergleicht konstant-zeit.
+The **password is the bearer token** itself; there is no session layer. A
+session token would be exactly as secure as the password it replaces: both sit
+in `localStorage`, both grant the same thing, neither can be revoked
+individually. The server keeps only a SHA-256 hash and compares in constant
+time.
 
-**Kein Rate-Limiting, bewusst.** Das Passwort wird generiert, nicht gewählt —
-24 Zeichen aus einem 32er-Alphabet, also 120 Bit. Durchprobieren ist damit kein
-realistischer Angriff, und ein Zähler bräuchte zusätzlichen State für null
-Gewinn. Aus demselben Grund kein PBKDF2: Key-Stretching schützt schwache
-Passwörter, nicht zufällige.
+**No rate limiting, deliberately.** The password is generated, not chosen — 24
+characters from a 32-character alphabet, so 120 bits. Guessing is not a
+realistic attack, and a counter would need extra state for no gain. Same reason
+there is no PBKDF2: key stretching protects weak passwords, not random ones.
 
-Der Einladungslink trägt das Passwort im **Fragment** (`#k=…`). Fragmente
-werden nie an den Server geschickt, landen also in keinem Log — wohl aber in
-der Browser-History und in dem Chat, über den du den Link verschickt hast.
+The invite link carries the password in the **fragment** (`#k=…`). Fragments are
+never sent to the server, so they appear in no log — but they do appear in
+browser history and in the chat you sent the link through.
+
+Because of that, and because an installed iOS app starts without the fragment
+and with its own storage, the Home Screen gate shows the password once with a
+copy button. Only when it actually came from the link — never when it merely
+sits in `localStorage`.
 
 <br>
 
 ## Push
 
-`worker/push.js` implementiert beide RFCs zu Fuß, in etwa 150 Zeilen:
+`worker/push.js` implements both RFCs by hand, in about 150 lines:
 
 | | |
 |---|---|
-| **RFC 8291** | ECDH P-256 → HKDF → AES-128-GCM, ein Record, `aes128gcm` |
-| **RFC 8292** | ES256-JWT über `aud` + `exp` + `sub`, Header `vapid t=…, k=…` |
+| **RFC 8291** | ECDH P-256 → HKDF → AES-128-GCM, one record, `aes128gcm` |
+| **RFC 8292** | ES256 JWT over `aud` + `exp` + `sub`, header `vapid t=…, k=…` |
 
-Kein `Buffer`, keine Node-Builtins — nur `crypto.subtle`, `fetch` und
-`Uint8Array`. Dieselbe Datei läuft unverändert in Workers, Node, Deno und im
-Browser, ohne Kompatibilitäts-Flags.
+No `Buffer`, no Node builtins — only `crypto.subtle`, `fetch` and `Uint8Array`.
+The same file runs unchanged in Workers, Node, Deno and the browser, without
+compatibility flags.
 
-Eine Nachricht an eine Person fächert auf ihre Geräte auf. Antwortet ein Gerät
-mit `410` oder `404`, ist die Subscription tot: das **Gerät** fliegt raus, die
-Person bleibt.
+A message to a person fans out to their devices. If a device answers `410` or
+`404` the subscription is dead: the **device** is dropped, the person stays.
 
-**Die Notification zeigt auf iOS nur Titel und Text** — ein eigenes „von"-Feld
-gibt es nicht. Ohne eigenen Titel steht deshalb der Absender dort:
-„**maximilian kallina**" / „build ist durch". Wer geschrieben hat, steht im Verlauf
-ohnehin immer.
+**A notification on iOS shows only a title and body** — there is no separate
+"from" field. Without a title of your own the sender goes there:
+"**maximilian kallina**" / "build is green". Who wrote it is in the history
+regardless.
 
 <br>
 
-## Plattformen
+## Platforms
 
-| | Empfangen | Anmerkung |
+| | Receiving | Note |
 |---|---|---|
-| **iPhone / iPad** | ab iOS 16.4 | nur vom Home-Bildschirm, siehe unten |
-| **Android** | Chrome, Firefox, Edge | einfach im Tab, kein Installieren nötig |
-| **Mac / Windows / Linux** | Chrome, Firefox, Edge, Safari | Desktop-Notifications |
+| **iPhone / iPad** | iOS 16.4+ | Home Screen only, see below |
+| **Android** | Chrome, Firefox, Edge | plain browser tab, no install needed |
+| **Mac / Windows / Linux** | Chrome, Firefox, Edge, Safari | desktop notifications |
 
-Push läuft überall über dieselben RFCs — nur der Endpunkt unterscheidet sich
-(Apple bei iOS und Safari, FCM bei Chrome und Android, Mozilla bei Firefox).
-Der Code sieht davon nichts: er schickt an die URL, die in der Subscription
-steht.
+Push runs over the same RFCs everywhere — only the endpoint differs (Apple for
+iOS and Safari, FCM for Chrome and Android, Mozilla for Firefox). The code sees
+none of it: it posts to whatever URL the subscription carries.
 
-Senden kann ohnehin jeder Browser, ganz ohne Anmeldung — dafür braucht es nur
-das Passwort.
+Sending works from any browser without registering at all — that only needs the
+password.
 
 <br>
 
 ## iOS
 
-Der einzige Sonderfall. Push gibt es nur, wenn die Seite **vom Home-Bildschirm**
-startet. In Safari selbst ist die API gesperrt — daran führt kein Weg vorbei.
+The one special case. Push exists only when the page is launched **from the
+Home Screen**. In Safari itself the API is locked, and there is no way around
+that.
 
-Die App fängt das ab: läuft sie auf iOS und nicht im Standalone-Modus, zeigt
-sie **ausschließlich** die Home-Bildschirm-Anleitung. Kein Passwortfeld, nichts,
-woran man sich vorbeimogeln kann. Das ist Absicht — die PWA bekommt einen
-eigenen Storage-Kontext, wer sich vorher in Safari anmeldet, müsste hinterher
-alles nochmal eingeben.
+The app catches it: running on iOS and not in standalone mode, it shows
+**nothing but** the Home Screen instructions. No password field, nothing to slip
+past. That is on purpose — the installed app gets its own storage context, so
+anyone signing in beforehand in Safari would have to enter everything again.
 
 <br>
 
-## Eigene Domain
+## Custom domain
 
-Danach wird beim Setup gefragt:
+You are asked during setup:
 
 ```
-2  Adresse
-   Eigene Domain? (z. B. pager.example.com — leer für workers.dev)
+2  Address and contact
+   Custom domain? (e.g. pager.example.com — blank for workers.dev)
 ```
 
-Leer lassen → der Space läuft unter `<name>.<subdomain>.workers.dev`. Gibst du
-eine an, trägt `setup.mjs` sie als `custom_domain`-Route ein und schaltet
-`workers.dev` ab, damit nur **eine** öffentliche Adresse existiert. Die Zone
-muss in deinem Cloudflare-Konto liegen; den DNS-Eintrag und das Zertifikat legt
-wrangler beim Deploy selbst an — rechne beim ersten Mal mit ein, zwei Minuten.
+Leave it blank and the space runs on `<name>.<subdomain>.workers.dev`. Give one
+and `setup.mjs` writes it as a `custom_domain` route and turns `workers.dev`
+off, so exactly **one** public address exists. The zone has to live in your
+Cloudflare account; wrangler creates the DNS record and the certificate on
+deploy — expect a minute or two the first time.
 
-Gefragt wird außerdem nach einer **Kontaktadresse**. Die landet als
-VAPID-Subject in jedem Push — darüber melden sich Apple und Google, wenn mit
-deinen Nachrichten etwas nicht stimmt. Sie geht ausschließlich an die
-Push-Dienste, nie an Nutzer deines Space. Vorgeschlagen wird die Adresse deines
-Cloudflare-Kontos; du kannst jede andere eintragen.
+You are also asked for a **contact address**. It goes into every push as the
+VAPID subject — Apple and Google use it to reach you when something is wrong
+with your messages. It goes to the push services only, never to users of your
+space. Your Cloudflare account address is suggested; any other works.
 
-Nicht-interaktiv geht beides auch:
+Both work non-interactively too:
 
 ```bash
 node setup.mjs --domain=pager.example.com --email=pager@example.com
 ```
 
-`wrangler.jsonc` trägt nach dem Setup deine eigenen Werte — Domain und
-`database_id`. Das ist so gewollt: die Datei ist Konfiguration deiner Instanz,
-kein Template. Ein Fork überschreibt sie beim ersten `npm run setup`.
+After setup `wrangler.jsonc` carries your own values — domain and
+`database_id`. That is intended: the file is configuration of your instance,
+not a template. A fork overwrites it on its first `npm run setup`.
 
 <br>
 
-## Betrieb
+## Operating
 
 ```bash
-npm run deploy     # Codeänderungen ausrollen
-npm run password   # neues Space-Passwort — Geräte bleiben angemeldet
-npm run dev        # lokal auf localhost:8787
-npm run logs       # live mitlesen
+npm run deploy     # roll out code changes
+npm run password   # new space password — devices stay registered
+npm run dev        # local, on localhost:8787
+npm run logs       # follow live
 ```
 
-Für `npm run dev` brauchst du einmalig eine lokale Datenbank und lokale
-Secrets — die echten liegen nur bei Cloudflare:
+`setup.mjs` belongs at the beginning only: a second run generates new VAPID
+keys, and every device would have to register again. To lock someone out,
+`npm run password` is enough — it rotates the password hash and nothing else.
+
+For `npm run dev` you need a local database and local secrets once; the real
+ones live at Cloudflare only:
 
 ```bash
 npx wrangler d1 execute pager --local --file worker/schema.sql
 ```
 
-Dazu eine `.dev.vars` mit `PAGER_PASSWORD_HASH`, `VAPID_PUBLIC`,
-`VAPID_PRIVATE` und `VAPID_SUBJECT` (gitignored). Die lokale D1 hängt an der
-`database_id` aus `wrangler.jsonc` — ändert die sich, ist die lokale Datenbank
-wieder leer.
-
-`setup.mjs` gehört nur an den Anfang: ein zweiter Lauf erzeugt neue
-VAPID-Schlüssel, und danach müssten sich alle Geräte neu anmelden. Zum
-Aussperren einer Person reicht `npm run password` — das rotiert nur den
-Passwort-Hash.
+Plus a `.dev.vars` with `PAGER_PASSWORD_HASH`, `VAPID_PUBLIC`, `VAPID_PRIVATE`
+and `VAPID_SUBJECT` (gitignored). The local D1 hangs off the `database_id` in
+`wrangler.jsonc` — change that and the local database is empty again.
 
 <br>
 
-## Kosten
+## Cost
 
-Nichts, in dieser Größenordnung.
+Nothing, at this scale.
 
-Web Push auf iOS läuft ohne Apple-Developer-Account; die 99 €/Jahr fallen nur
-für native Apps an. Cloudflares Free Tier deckt den Rest — 100.000
-Worker-Requests am Tag, 5 GB D1. Eine Handvoll Leute kommt da nicht in die Nähe.
+Web Push on iOS runs without an Apple Developer account; the 99 €/year applies
+to native apps only. Cloudflare's free tier covers the rest — 100,000 worker
+requests a day, 5 GB of D1. A handful of people will not come close.
 
 <br>
 
-## Was es bewusst nicht ist
+## What it deliberately is not
 
-**Kein Messenger.** Kein Antwort-Button, keine Lesebestätigungen, keine
-Verschachtelung. Man verfasst eine neue Nachricht an jemanden. Dass die
-Historie dabei aussieht wie ein Chat, ist ein Nebeneffekt — der Punkt ist ein
-Alarm, auf den man nicht antworten muss.
+**Not a messenger.** No reply button, no read receipts, no nesting. You compose
+a new message to someone. That the history ends up looking like a chat is a side
+effect — the point is an alert nobody has to answer.
 
-**Kein Rechtemodell.** Ein Passwort für den ganzen Space, keine Accounts, keine
-Rollen. Der Absendername ist selbst gewählt und wird nicht geprüft: wer das
-Passwort hat, kann sich nennen wie er will und jeden anfunken. Für eine
-vertraute Runde gedacht, nicht für ein Unternehmen.
+**Not a permission model.** One password for the whole space, no accounts, no
+roles. The sender name is self-chosen and unverified: whoever has the password
+can call themselves anything and page anyone. Meant for a circle that trusts
+each other, not for a company.
 
-**Kein sicherer Messenger.** Der Verlauf liegt unverschlüsselt in D1, der
-Betreiber kann alles mitlesen. Wer Vertraulichkeit vor dem Server braucht,
-nimmt Signal — pager schickt Alarme, keine Geheimnisse.
+**Not a secure messenger.** The history sits unencrypted in D1 and the operator
+can read all of it. If you need confidentiality from the server, use Signal —
+pager sends alerts, not secrets.
 
-**Ein Fork ist ein neuer Space, kein Beitritt.** Wer mitmachen soll, bekommt
-einen Link — nicht das Repo.
+**A fork is a new space, not a way to join one.** Whoever should take part gets
+a link, not the repo.
 
 <br>
 
@@ -353,9 +350,13 @@ einen Link — nicht das Repo.
 npm install  →  npm run setup
 ```
 
-<sub>Cloudflare Workers · D1 · Web Push · null Laufzeit-Abhängigkeiten</sub>
+<sub>Cloudflare Workers · D1 · Web Push · zero runtime dependencies</sub>
 
 <br><br>
+
+<sub>The interface is in English; code comments are in German.</sub>
+
+<br>
 
 <sub>MIT</sub>
 

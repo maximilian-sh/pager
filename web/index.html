@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -208,71 +208,72 @@
 </head>
 <body>
 
-<!-- ─── 1. Gate: iOS gibt Push nur vom Home-Bildschirm frei ──────────────── -->
+<!-- ─── 1. Gate: iOS only allows push from the Home Screen ──────────────── -->
 <section id="gate" class="card hidden">
   <header><img class="mark" src="icon-192.png" alt=""><h1>pager</h1></header>
-  <!-- Nur wenn ein Passwort im Link stand: Es muss hier raus, denn die PWA
-       startet gleich ohne Fragment und mit eigenem Storage. -->
+  <!-- Only when the link carried a password: it has to leave the browser
+       here, because the installed app starts without the fragment and with
+       its own storage. -->
   <div id="gateKey" class="hidden">
-    <h2>Zuerst: Passwort sichern</h2>
+    <h2>First: save the password</h2>
     <div class="secret" id="gateSecret"></div>
-    <button id="gateCopy" class="wide">Passwort kopieren</button>
+    <button id="gateCopy" class="wide">Copy password</button>
     <div class="row"><span class="note" id="gateStatus"></span></div>
     <p class="hint">
-      Gleich fragt pager noch einmal danach. Die App startet eigenständig —
-      der Link aus dem Chat ist dann nicht mehr zur Hand.
+      pager asks for it again in a moment. The app starts on its own — the
+      link from your chat won't be at hand any more.
     </p>
     <hr style="border:none;border-top:1px solid var(--line);margin:2.25rem 0 2rem">
   </div>
 
-  <h2 id="gateSteps">Zum Home-Bildschirm</h2>
+  <h2 id="gateSteps">Add to Home Screen</h2>
   <ol>
-    <li>Unten auf das <b>Teilen-Symbol</b> tippen</li>
-    <li><b>Zum Home-Bildschirm</b> wählen</li>
-    <li>pager <b>von dort</b> öffnen, nicht aus Safari</li>
+    <li>Tap the <b>Share</b> button below</li>
+    <li>Choose <b>Add to Home Screen</b></li>
+    <li>Open pager <b>from there</b>, not from Safari</li>
   </ol>
   <p class="hint">
-    iOS erlaubt Benachrichtigungen nur für Seiten, die vom Home-Bildschirm
-    starten. In Safari selbst geht es nicht — deshalb hier noch nichts weiter.
+    iOS only grants notifications to pages launched from the Home Screen.
+    Safari itself cannot — which is why there is nothing else here yet.
   </p>
 </section>
 
 <!-- ─── 2. Login ─────────────────────────────────────────────────────────── -->
 <section id="login" class="card hidden">
   <header><img class="mark" src="icon-192.png" alt=""><h1>pager</h1></header>
-  <h2>Passwort</h2>
+  <h2>Password</h2>
   <label>
-    <span>Du hast es zusammen mit dem Link bekommen</span>
+    <span>You received it together with the link</span>
     <input id="password" type="password" class="mono" autocomplete="current-password">
   </label>
-  <button id="doLogin" class="wide">Weiter</button>
+  <button id="doLogin" class="wide">Continue</button>
   <div class="row"><span class="note" id="loginStatus"></span></div>
 </section>
 
-<!-- ─── 3. Identität ─────────────────────────────────────────────────────── -->
+<!-- ─── 3. Identity ──────────────────────────────────────────────────────── -->
 <section id="identity" class="card hidden">
   <header><img class="mark" src="icon-192.png" alt=""><h1>pager</h1></header>
-  <h2>Wer bist du?</h2>
+  <h2>Who are you?</h2>
   <label>
-    <span>Vor- und Nachname</span>
+    <span>First and last name</span>
     <input id="myName" placeholder="z. B. maximilian kallina" autocomplete="name">
   </label>
   <label>
-    <span>Dieses Gerät</span>
+    <span>This device</span>
     <input id="myDevice" autocomplete="off">
   </label>
-  <button id="doIdentity" class="wide">Weiter</button>
+  <button id="doIdentity" class="wide">Continue</button>
   <div class="row"><span class="note" id="identityStatus"></span></div>
   <p class="hint">
-    Der Name steht als Absender auf deinen Nachrichten. Er wird nicht geprüft —
-    im Space vertraut man sich.
+    Your name goes on every message you send. It is not verified — a space
+    runs on trust.
   </p>
 </section>
 
 <!-- ─── 4. App ───────────────────────────────────────────────────────────── -->
 <div id="app" class="hidden">
 
-  <!-- Personenliste -->
+  <!-- People -->
   <div id="listView" class="view hidden">
     <div class="bar">
       <img class="mark" src="icon-192.png" alt="">
@@ -289,7 +290,7 @@
           <div class="name" id="selfName"></div>
           <div class="meta" id="selfMeta"></div>
         </div>
-        <button id="enable" class="ghost">Benachrichtigungen</button>
+        <button id="enable" class="ghost">Notifications</button>
       </div>
       <div class="row tight"><span class="note" id="selfStatus"></span></div>
     </div>
@@ -310,13 +311,13 @@
     <div class="composer">
       <div class="inner">
         <div class="line">
-          <textarea id="body" rows="1" placeholder="Nachricht"></textarea>
-          <button id="doSend">Senden</button>
+          <textarea id="body" rows="1" placeholder="Message"></textarea>
+          <button id="doSend">Send</button>
         </div>
-        <button class="toggle" id="moreToggle">+ Titel und Link</button>
+        <button class="toggle" id="moreToggle">+ Title and link</button>
         <div class="extra hidden" id="extra">
-          <input id="title" placeholder="Titel — sonst steht dein Name da" autocomplete="off">
-          <input id="url" class="mono" placeholder="https://… beim Antippen öffnen" autocomplete="off">
+          <input id="title" placeholder="Title — your name if left empty" autocomplete="off">
+          <input id="url" class="mono" placeholder="https://… opened on tap" autocomplete="off">
         </div>
         <div class="row tight">
           <span class="note grow" id="sendStatus"></span>
@@ -351,6 +352,8 @@ function initials(person) {
 function when(ts) {
   const date = new Date(ts);
   const today = new Date().toDateString() === date.toDateString();
+  // Bewusst feste Locale: europäisches Format, Tag.Monat und 24 Stunden —
+  // unabhängig davon, wie das Gerät eingestellt ist.
   return today
     ? date.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' })
     : date.toLocaleDateString('de', { day: '2-digit', month: '2-digit' })
@@ -370,7 +373,7 @@ function guessDevice() {
   if (/Android/.test(ua)) return 'android';
   if (/Mac/.test(ua)) return 'mac';
   if (/Windows/.test(ua)) return 'pc';
-  return 'gerät';
+  return 'device';
 }
 
 // ─── Zustand ─────────────────────────────────────────────────────────────────
@@ -414,8 +417,8 @@ async function refreshPeople() {
       <button class="person" data-person="*">
         <div class="avatar">*</div>
         <div class="who">
-          <span class="name">alle</span>
-          <span class="meta">${people.length} ${people.length === 1 ? 'Person' : 'Personen'}</span>
+          <span class="name">everyone</span>
+          <span class="meta">${people.length} ${people.length === 1 ? 'person' : 'people'}</span>
         </div>
         <span class="chev">›</span>
       </button>`);
@@ -427,8 +430,8 @@ async function refreshPeople() {
       <button class="person" data-person="${esc(person.person)}">
         <div class="avatar">${esc(initials(person.person))}</div>
         <div class="who">
-          <span class="name">${esc(person.person)}${self ? ' · du' : ''}</span>
-          <span class="meta">${person.devices} ${person.devices === 1 ? 'Gerät' : 'Geräte'}</span>
+          <span class="name">${esc(person.person)}${self ? ' · you' : ''}</span>
+          <span class="meta">${person.devices} ${person.devices === 1 ? 'device' : 'devices'}</span>
         </div>
         <span class="chev">›</span>
       </button>`);
@@ -436,12 +439,12 @@ async function refreshPeople() {
 
   $('peopleList').innerHTML = rows.length
     ? rows.join('')
-    : `<div class="empty">Noch niemand hat Benachrichtigungen aktiviert.
-       Du kannst erst senden, wenn mindestens ein Gerät angemeldet ist.</div>`;
+    : `<div class="empty">Nobody has enabled notifications yet.
+       You can send once at least one device is registered.</div>`;
 
   if (!others.length && people.length) {
     $('peopleList').insertAdjacentHTML('beforeend',
-      '<p class="hint">Nur du bist bisher angemeldet. Schick den Link weiter.</p>');
+      '<p class="hint">You are the only one registered so far. Pass the link on.</p>');
   }
 }
 
@@ -456,14 +459,14 @@ $('peopleList').onclick = (event) => {
 async function showThread() {
   show('listView', false);
   show('threadView');
-  $('threadName').textContent = openThread === '*' ? 'alle' : openThread;
+  $('threadName').textContent = openThread === '*' ? 'everyone' : openThread;
 
   const target = people.find((p) => p.person === openThread);
   $('threadMeta').textContent = openThread === '*'
-    ? `${people.length} ${people.length === 1 ? 'Person' : 'Personen'}`
-    : target ? `${target.devices} ${target.devices === 1 ? 'Gerät' : 'Geräte'}` : 'keine Geräte';
+    ? `${people.length} ${people.length === 1 ? 'person' : 'people'}`
+    : target ? `${target.devices} ${target.devices === 1 ? 'device' : 'devices'}` : 'no devices';
 
-  $('thread').innerHTML = '<div class="empty">Lade…</div>';
+  $('thread').innerHTML = '<div class="empty">Loading…</div>';
   await refreshThread();
   $('body').focus();
 }
@@ -491,7 +494,7 @@ async function refreshThread() {
             </div>
           </div>`;
       }).join('')
-    : '<div class="empty">Noch nichts. Schreib die erste Nachricht.</div>';
+    : '<div class="empty">Nothing yet. Write the first message.</div>';
 
   $('threadScroll').scrollTop = $('threadScroll').scrollHeight;
 }
@@ -514,7 +517,7 @@ $('body').oninput = () => {
 
 $('moreToggle').onclick = () => {
   const open = $('extra').classList.toggle('hidden');
-  $('moreToggle').textContent = open ? '+ Titel und Link' : '– Titel und Link';
+  $('moreToggle').textContent = open ? '+ Title and link' : '– Title and link';
 };
 
 $('doSend').onclick = async () => {
@@ -522,7 +525,7 @@ $('doSend').onclick = async () => {
   if (!body) return;
 
   $('doSend').disabled = true;
-  note('sendStatus', 'Sende…');
+  note('sendStatus', 'Sending…');
   try {
     const result = await api('send', {
       from: store.me,
@@ -536,7 +539,8 @@ $('doSend').onclick = async () => {
     $('title').value = '';
     $('url').value = '';
     $('count').textContent = '';
-    note('sendStatus', result.dead ? `${result.dead} totes Gerät entfernt` : '', 'ok');
+    note('sendStatus', result.dead
+      ? `${result.dead} dead ${result.dead === 1 ? 'device' : 'devices'} removed` : '', 'ok');
     await refreshThread();
   } catch (err) {
     note('sendStatus', err.message, 'err');
@@ -560,9 +564,9 @@ async function refreshSelf() {
   $('selfName').textContent = store.me;
   const subscription = await currentSubscription();
   $('selfMeta').textContent = subscription
-    ? `${store.device} · empfängt`
-    : `${store.device} · sendet nur`;
-  $('enable').textContent = subscription ? 'Abmelden' : 'Aktivieren';
+    ? `${store.device} · receiving`
+    : `${store.device} · send only`;
+  $('enable').textContent = subscription ? 'Turn off' : 'Turn on';
 }
 
 $('enable').onclick = async () => {
@@ -573,16 +577,16 @@ $('enable').onclick = async () => {
     if (existing) {
       await api('unregister', { endpoint: existing.endpoint });
       await existing.unsubscribe();
-      note('selfStatus', 'Dieses Gerät empfängt nichts mehr.', 'ok');
+      note('selfStatus', 'This device no longer receives anything.', 'ok');
     } else {
-      if (!pushable) throw new Error('Dieser Browser kann kein Web Push.');
-      note('selfStatus', 'Melde an…');
+      if (!pushable) throw new Error('This browser cannot do Web Push.');
+      note('selfStatus', 'Registering…');
 
       const registration = await navigator.serviceWorker.register('sw.js');
       await navigator.serviceWorker.ready;
 
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') throw new Error(`Berechtigung: ${permission}`);
+      if (permission !== 'granted') throw new Error(`Permission: ${permission}`);
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -594,7 +598,7 @@ $('enable').onclick = async () => {
         device: store.device,
         subscription: subscription.toJSON(),
       });
-      note('selfStatus', 'Angemeldet. Dieses Gerät empfängt jetzt.', 'ok');
+      note('selfStatus', 'Registered. This device receives now.', 'ok');
     }
 
     await refreshSelf();
@@ -609,11 +613,11 @@ $('enable').onclick = async () => {
 $('gateCopy').onclick = async () => {
   try {
     await navigator.clipboard.writeText($('gateSecret').textContent);
-    note('gateStatus', 'Kopiert. Jetzt zum Home-Bildschirm hinzufügen.', 'ok');
+    note('gateStatus', 'Copied. Now add it to your Home Screen.', 'ok');
   } catch {
     // Ohne Clipboard-Recht bleibt das Markieren — user-select: all macht daraus
     // einen einzigen Tipp.
-    note('gateStatus', 'Bitte oben antippen und von Hand kopieren.', 'err');
+    note('gateStatus', 'Please tap the field above and copy it by hand.', 'err');
   }
 };
 
@@ -634,7 +638,7 @@ $('doLogin').onclick = async () => {
   const password = $('password').value.trim();
   if (!password) return;
   $('doLogin').disabled = true;
-  note('loginStatus', 'Prüfe…');
+  note('loginStatus', 'Checking…');
   try {
     store.password = password;
     await api('login', {});
@@ -664,15 +668,15 @@ async function afterLogin() {
 $('myName').oninput = () => {
   const match = people.find((p) => p.person === normalize($('myName').value));
   note('identityStatus', match
-    ? `Es gibt schon ${match.devices} ${match.devices === 1 ? 'Gerät' : 'Geräte'} für „${match.person}". Ist das dein weiteres Gerät?`
+    ? `${match.person} already has ${match.devices} ${match.devices === 1 ? 'device' : 'devices'}. Is this another one of yours?`
     : '');
 };
 
 $('doIdentity').onclick = async () => {
   const me = normalize($('myName').value);
-  if (!me) return note('identityStatus', 'Bitte gib deinen Namen ein.', 'err');
+  if (!me) return note('identityStatus', 'Please enter your name.', 'err');
   if (!me.includes(' ')) {
-    return note('identityStatus', 'Bitte Vor- und Nachname, damit man dich zuordnen kann.', 'err');
+    return note('identityStatus', 'First and last name, please — so people can tell who you are.', 'err');
   }
   store.me = me;
   store.device = normalize($('myDevice').value) || guessDevice();
@@ -717,7 +721,7 @@ document.addEventListener('visibilitychange', () => {
     if (fromLink) {
       $('gateSecret').textContent = fromLink;
       show('gateKey');
-      $('gateSteps').textContent = 'Dann: zum Home-Bildschirm';
+      $('gateSteps').textContent = 'Then: add to Home Screen';
     }
     return showOnly('gate');
   }
@@ -725,7 +729,7 @@ document.addEventListener('visibilitychange', () => {
   try {
     vapidPublic = (await (await fetch('api/config')).json()).vapidPublic;
   } catch {
-    document.body.innerHTML = '<section class="card"><p class="note err">Server nicht erreichbar.</p></section>';
+    document.body.innerHTML = '<section class="card"><p class="note err">Server unreachable.</p></section>';
     return;
   }
 
@@ -736,7 +740,7 @@ document.addEventListener('visibilitychange', () => {
   } catch {
     store.password = '';
     showOnly('login');
-    note('loginStatus', 'Bitte Passwort eingeben.', '');
+    note('loginStatus', 'Please enter the password.', '');
     return;
   }
 

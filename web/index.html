@@ -183,6 +183,15 @@
   }
   .count { font-size: 0.72rem; color: var(--faint); }
 
+  .secret {
+    padding: 0.8rem 0.9rem; margin-bottom: 0.9rem;
+    border: 1px solid var(--line); border-radius: 9px; background: #fafafa;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.95rem; letter-spacing: 0.03em; word-break: break-all;
+    /* Ein Tipp markiert alles — Rettungsanker, falls die Zwischenablage klemmt. */
+    user-select: all; -webkit-user-select: all;
+  }
+
   .hidden { display: none !important; }
 
   /* iOS zoomt beim Fokus in jedes Feld, dessen Schrift unter 16px liegt — und
@@ -202,7 +211,21 @@
 <!-- ─── 1. Gate: iOS gibt Push nur vom Home-Bildschirm frei ──────────────── -->
 <section id="gate" class="card hidden">
   <header><img class="mark" src="icon-192.png" alt=""><h1>pager</h1></header>
-  <h2>Fast fertig</h2>
+  <!-- Nur wenn ein Passwort im Link stand: Es muss hier raus, denn die PWA
+       startet gleich ohne Fragment und mit eigenem Storage. -->
+  <div id="gateKey" class="hidden">
+    <h2>Zuerst: Passwort sichern</h2>
+    <div class="secret" id="gateSecret"></div>
+    <button id="gateCopy" class="wide">Passwort kopieren</button>
+    <div class="row"><span class="note" id="gateStatus"></span></div>
+    <p class="hint">
+      Gleich fragt pager noch einmal danach. Die App startet eigenständig —
+      der Link aus dem Chat ist dann nicht mehr zur Hand.
+    </p>
+    <hr style="border:none;border-top:1px solid var(--line);margin:2.25rem 0 2rem">
+  </div>
+
+  <h2 id="gateSteps">Zum Home-Bildschirm</h2>
   <ol>
     <li>Unten auf das <b>Teilen-Symbol</b> tippen</li>
     <li><b>Zum Home-Bildschirm</b> wählen</li>
@@ -583,6 +606,17 @@ $('enable').onclick = async () => {
   }
 };
 
+$('gateCopy').onclick = async () => {
+  try {
+    await navigator.clipboard.writeText($('gateSecret').textContent);
+    note('gateStatus', 'Kopiert. Jetzt zum Home-Bildschirm hinzufügen.', 'ok');
+  } catch {
+    // Ohne Clipboard-Recht bleibt das Markieren — user-select: all macht daraus
+    // einen einzigen Tipp.
+    note('gateStatus', 'Bitte oben antippen und von Hand kopieren.', 'err');
+  }
+};
+
 // ─── Ablauf ──────────────────────────────────────────────────────────────────
 function showOnly(id) {
   for (const section of ['gate', 'login', 'identity', 'app']) show(section, section === id);
@@ -659,16 +693,33 @@ document.addEventListener('visibilitychange', () => {
 });
 
 (async () => {
+  // Passwort aus dem Einladungslink: #k=… Fragmente gehen nie an den Server.
+  // Muss vor dem Gate stehen — sonst läge es auf iOS ungelesen herum.
+  const fromLink = new URLSearchParams(location.hash.slice(1)).get('k');
+  if (fromLink) {
+    store.password = fromLink;
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
   // iOS gibt Push nur frei, wenn die Seite vom Home-Bildschirm startet. Wer
   // sich vorher in Safari anmeldet, verliert alles beim Hinzufügen — die PWA
-  // bekommt einen eigenen Storage. Deshalb hier gar nichts anderes zeigen.
-  if (isIOS && !standalone) return showOnly('gate');
-
-  // Passwort aus dem Einladungslink: #k=… Fragmente gehen nie an den Server.
-  const fragment = new URLSearchParams(location.hash.slice(1));
-  if (fragment.get('k')) {
-    store.password = fragment.get('k');
-    history.replaceState(null, '', location.pathname + location.search);
+  // bekommt einen eigenen Storage.
+  //
+  // Genau deshalb muss das Passwort hier sichtbar werden: die PWA startet
+  // laut Manifest auf "./", also ohne Fragment, und kommt an den localStorage
+  // von Safari nicht heran. Wer den Link aus WhatsApp antippt, sieht dort nur
+  // eine Vorschaukarte und hätte das Passwort sonst nirgends.
+  if (isIOS && !standalone) {
+    // Nur zeigen, wenn das Passwort gerade aus dem Link kam. Läge es bloss im
+    // localStorage, würde jeder spätere Aufruf von pager.example.com es im
+    // Klartext auf den Bildschirm legen — auch für den, der zufällig das
+    // entsperrte Handy in der Hand hält.
+    if (fromLink) {
+      $('gateSecret').textContent = fromLink;
+      show('gateKey');
+      $('gateSteps').textContent = 'Dann: zum Home-Bildschirm';
+    }
+    return showOnly('gate');
   }
 
   try {
